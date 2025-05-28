@@ -1,0 +1,50 @@
+/* src/components/Header.css */
+.header-container {
+  display: flex; /* Permite usar flexbox para centralizar */
+  align-items: center; /* Centraliza verticalmente */
+  justify-content: center; /* Centraliza horizontalmente */
+  margin-bottom: 25px; /* Espaço abaixo do header */
+  padding: 15px 0; /* Aumenta o padding vertical */
+  background-color: #fff; /* Fundo branco para o cabeçalho */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Sombra suave */
+  min-height: 80px; /* Garante uma altura mínima para o header */
+}
+
+.header-logo-central {
+  max-width: 180px; /* Tamanho máximo da logo em telas maiores */
+  height: auto; /* Mantém a proporção da imagem */
+  display: block; /* Remove espaços extras comuns em imagens */
+}
+
+/* Opcional: Estilo para o título se você decidir mantê-lo */
+/*
+.header-title {
+  color: #01579b;
+  margin: 0;
+  text-align: center;
+  font-size: 1.8em;
+}
+*/
+
+/* Responsividade para telas menores (smartphones) */
+@media (max-width: 600px) {
+  .header-container {
+    padding: 10px 0; /* Reduz o padding em telas pequenas */
+    min-height: 60px;
+  }
+  .header-logo-central {
+    max-width: 120px; /* Reduz o tamanho da logo em telas menores */
+  }
+  /*
+  .header-title {
+    font-size: 1.4em;
+  }
+  */
+}
+
+/* Para telas muito pequenas, como feature phones ou quando o zoom é grande */
+@media (max-width: 400px) {
+  .header-logo-central {
+    max-width: 100px; /* Ainda menor para telas muito pequenas */
+  }
+}

@@ -1,0 +1,89 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\components\WhatsAppSenderModal.css */
+.whatsapp-fornecedor-list {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.whatsapp-fornecedor-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 5px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    transition: opacity 0.3s ease, transform 0.3s ease; /* Adiciona transição para suavidade */
+}
+
+.whatsapp-fornecedor-list li.sent-item { /* NOVA CLASSE: Para itens já enviados */
+    opacity: 0.5; /* Torna o item semi-transparente */
+    /* Ou, se quiser que ele realmente "saia da tela" */
+    /* display: none; */ /* Descomente esta linha e comente a de opacity se quiser que sumam completamente */
+    /* Isso exigiria um useEffect para atualizar a lista "fornecedoresParaEnviar" */
+}
+
+.whatsapp-fornecedor-list li:last-child {
+    border-bottom: none;
+}
+
+.whatsapp-fornecedor-list label {
+    flex-grow: 1; /* Permite que o label ocupe o máximo de espaço */
+    margin-left: 10px;
+    font-weight: normal; /* Sobrescreve o bold padrão de label em modal */
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.whatsapp-fornecedor-list input[type="checkbox"] {
+    margin-right: 5px;
+    width: auto; /* Garante que o checkbox não pegue 100% */
+}
+
+.send-wpp-button {
+    background-color: #25d366; /* Verde WhatsApp */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.send-wpp-button:hover:not(:disabled) {
+    background-color: #1da851;
+}
+
+.send-wpp-button:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
+.status-icon {
+    margin-left: 10px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.status-icon.success {
+    color: #28a745; /* Verde sucesso */
+}
+
+.status-icon.error {
+    color: #dc3545; /* Vermelho erro */
+}
+
+/* Ajustes para o textarea da mensagem personalizada */
+.modal-body textarea {
+    width: calc(100% - 16px);
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+    resize: vertical; /* Permite redimensionar verticalmente */
+}

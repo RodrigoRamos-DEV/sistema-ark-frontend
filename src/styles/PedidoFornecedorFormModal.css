@@ -1,0 +1,179 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\styles\PedidoFornecedorFormModal.css */
+
+/* Faz o modal ser mais largo para a planilha */
+.modal-content-full-width {
+    width: 98%; /* Ocupa quase toda a largura da tela */
+    max-width: 1800px; /* Um limite máximo bem amplo */
+    max-height: 95vh; /* Limita a altura para que caiba na tela */
+    overflow-y: auto; /* Permite scroll vertical se o conteúdo for muito longo */
+}
+
+/* Estilos para a "planilha" horizontal */
+.spreadsheet-container {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-top: 20px;
+    overflow-x: auto; /* Permite rolagem horizontal se a planilha for muito larga */
+    width: 100%;
+}
+
+/* Define o GRID principal para o cabeçalho e as linhas de dados */
+.spreadsheet-header,
+.spreadsheet-row {
+    display: grid;
+    /* Define as colunas para 2 blocos de (Qtd, Forn, Prod, Caminhao, Preco, Acoes) */
+    grid-template-columns: repeat(2, 
+        70px    /* Qtd */
+        1.5fr   /* Fornecedor */
+        1.5fr   /* Produto */
+        1.5fr   /* Caminhão */
+        1fr     /* Preço */
+        60px    /* Ações */
+    );
+    gap: 5px; /* Espaçamento entre as células */
+    padding: 8px 10px;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.spreadsheet-header {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+    border-bottom: 2px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-align: center; /* Centraliza cabeçalhos */
+    font-size: 0.85em; /* Ajusta tamanho da fonte para caber */
+    white-space: nowrap; /* Evita quebra de linha dos cabeçalhos */
+}
+
+/* Estilos para as células individuais */
+.spreadsheet-row .cell {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza o conteúdo nas células */
+    text-align: center; /* Garante que o texto dentro seja centralizado */
+}
+
+.spreadsheet-row input[type="number"],
+.spreadsheet-row input[type="text"],
+.spreadsheet-row select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 38px; /* Altura simétrica */
+    font-size: 0.85em; /* Ajusta tamanho da fonte para caber mais */
+}
+
+.remove-item-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 1.2em;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+}
+
+.remove-item-btn:hover {
+    background-color: #a52828;
+}
+
+.order-total {
+    margin: 15px 10px;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    text-align: right;
+    font-size: 1.1em;
+}
+
+/* --------------------------------------------------- */
+/* MEDIA QUERIES PARA A ESTRUTURA DE PLANILHA HORIZONTAL */
+/* --------------------------------------------------- */
+
+/* Em telas LARGAS, exibe 2 conjuntos completos de 5 colunas + Ações */
+@media (min-width: 900px) {
+    .spreadsheet-header,
+    .spreadsheet-row {
+        grid-template-columns: repeat(2, 
+            70px    /* Qtd */
+            1.5fr   /* Fornecedor */
+            1.5fr   /* Produto */
+            1.5fr   /* Caminhão */
+            1fr     /* Preço */
+            60px    /* Ações */
+        );
+    }
+}
+
+/* Em telas MÉDIAS/PEQUENAS, exibe 1 conjunto completo de 5 colunas + Ações */
+/* Isso garante que em telas menores, mesmo que a imagem mostre 2, para caber, vira 1 */
+@media (max-width: 899px) {
+    .spreadsheet-header,
+    .spreadsheet-row {
+        grid-template-columns: 
+            70px    /* Qtd */
+            1.5fr   /* Fornecedor */
+            1.5fr   /* Produto */
+            1.5fr   /* Caminhão */
+            1fr     /* Preço */
+            60px;   /* Ações */
+    }
+}
+
+/* Para telas MUITO PEQUENAS (mobile), empilha os campos dentro de cada "item-row" */
+@media (max-width: 600px) {
+    .spreadsheet-header {
+        display: none; /* Esconde o cabeçalho original da tabela em telas muito pequenas */
+    }
+
+    .spreadsheet-row {
+        grid-template-columns: 1fr; /* Cada row agora é uma única coluna para todos os campos */
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        padding: 10px;
+        position: relative;
+        gap: 0;
+    }
+
+    .spreadsheet-row .cell {
+        justify-content: flex-start;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+        margin-bottom: 5px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .spreadsheet-row .cell:last-child {
+        border-bottom: none;
+    }
+
+    /* Adiciona labels via CSS para campos empilhados em mobile */
+    .spreadsheet-row .col-quantidade::before { content: "Qtd: "; font-weight: bold; }
+    .spreadsheet-row .col-fornecedor-item::before { content: "Fornecedor: "; font-weight: bold; }
+    .spreadsheet-row .col-produto::before { content: "Produto: "; font-weight: bold; }
+    .spreadsheet-row .col-caminhao::before { content: "Caminhão: "; font-weight: bold; }
+    .spreadsheet-row .col-preco::before { content: "Preço: "; font-weight: bold; }
+    .spreadsheet-row .col-actions::before { content: "Ações: "; font-weight: bold; }
+
+    .spreadsheet-row .col-actions {
+        position: static;
+        width: 100%;
+        text-align: center;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+    .spreadsheet-row .remove-item-btn {
+        font-size: 1em;
+        padding: 5px 10px;
+        width: auto;
+    }
+}

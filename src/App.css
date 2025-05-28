@@ -1,0 +1,107 @@
+/* src/App.css */
+.app-container {
+  display: flex;
+  min-height: 100vh; /* Garante que o container ocupe a altura total da tela */
+}
+
+.main-content {
+  flex-grow: 1; /* Ocupa o restante do espaço horizontal */
+  margin-left: 200px; /* Compensa a largura da sidebar fixa */
+  padding-top: 10px; /* Pequeno padding no topo para o Header */
+}
+
+.page-content {
+  padding: 20px; /* Padding interno para o conteúdo de cada página */
+}
+
+/* Estilos básicos para tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden; /* Para garantir que o border-radius funcione */
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 12px 15px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+  color: #555;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f0f0f0;
+}
+
+/* Responsividade para tabelas */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Sidebar some, conteúdo ocupa 100% */
+  }
+  .sidebar {
+    width: 100%; /* Sidebar ocupa toda largura */
+    height: auto; /* Altura automática */
+    position: relative; /* Não fixa mais */
+    box-shadow: none;
+    padding: 10px 0;
+  }
+  .sidebar-nav {
+    display: flex; /* Links da sidebar em linha */
+    flex-wrap: wrap; /* Quebra em múltiplas linhas */
+    justify-content: center;
+  }
+  .sidebar-nav li {
+    margin: 5px 10px;
+  }
+  .sidebar-header {
+    display: none; /* Esconde o cabeçalho da sidebar em telas pequenas */
+  }
+  table, thead, tbody, th, td, tr {
+    display: block; /* Tabelas empilham em telas pequenas */
+  }
+  thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+  tr {
+    border: 1px solid #eee;
+    margin-bottom: 15px;
+  }
+  td {
+    border: none;
+    border-bottom: 1px solid #eee;
+    position: relative;
+    padding-left: 50%; /* Espaço para o "header" da célula */
+    text-align: right;
+  }
+  td:before {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: bold;
+  }
+  /* Rotular as células com seus cabeçalhos */
+  td:nth-of-type(1):before { content: "ID"; }
+  td:nth-of-type(2):before { content: "Nome"; }
+  td:nth-of-type(3):before { content: "Contato"; }
+  td:nth-of-type(4):before { content: "Endereço"; }
+  td:nth-of-type(5):before { content: "Itens"; } /* Para PedidosAdmin */
+  td:nth-of-type(6):before { content: "Ações"; } /* Para PedidosAdmin */
+}

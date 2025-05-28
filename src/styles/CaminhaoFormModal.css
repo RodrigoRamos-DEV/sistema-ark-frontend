@@ -1,0 +1,72 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\styles\CaminhaoFormModal.css */
+
+/* Estilos específicos para o CaminhaoFormModal */
+
+/* Ajustes para a seção de Dados do Caminhão */
+.caminhao-form-section .section-container {
+    /* Main grid for the section, flexible columns */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 2 a 3 colunas, largura mínima 200px */
+    gap: 15px; /* Espaçamento entre os itens do grid (os form-groups ou field-group-rows) */
+    align-items: start; /* Alinha os itens do grid ao topo de suas células, ajuda na simetria */
+}
+
+/* Garante que o campo de Modelo ocupe uma coluna padrão no grid principal */
+.caminhao-form-section .form-group.modelo-caminhao {
+    grid-column: span 1; 
+}
+
+/* Estilo para agrupar campos em uma única linha horizontal que ocupa a largura
+total do grid da seção (para Capacidade e Unidade) */
+.caminhao-form-section .field-group-row {
+    grid-column: 1 / -1; /* Faz com que este grupo ocupe todas as colunas disponíveis no grid principal */
+    display: flex; /* Usa flexbox para organizar os campos internos lado a lado */
+    gap: 15px; /* Espaçamento entre os campos dentro desta linha */
+    flex-wrap: wrap; /* Permite que os campos quebrem a linha em telas menores */
+    align-items: flex-start; /* Alinha os itens flex ao topo para simetria vertical das labels */
+    justify-content: flex-start; /* Alinha os itens à esquerda */
+}
+
+.caminhao-form-section .field-group-row .form-group {
+    flex: 1; /* Permite que os campos cresçam e ocupem o espaço disponível igualmente */
+    min-width: 120px; /* Largura mínima para cada campo individual dentro da linha */
+    margin-bottom: 0; /* Remove margem inferior, pois o gap do flexbox cuida do espaçamento */
+}
+
+/* Assegura que todos os inputs e selects tenham altura simétrica */
+/* (Reutiliza a altura definida em common-modal.css, mas garante que não haja conflitos) */
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body input[type="email"],
+.modal-body select,
+.modal-body textarea { /* Adicionado textarea aqui para consistência */
+    height: 38px; /* Altura fixa para inputs e selects */
+    min-height: 38px; /* Garante que não encolha */
+    box-sizing: border-box; /* Inclui padding e borda na altura total */
+}
+
+/* Ajusta textarea para ser maior e redimensionável */
+.modal-body textarea {
+    height: auto; 
+    min-height: 60px; 
+    resize: vertical;
+}
+
+
+/* Media Queries para Responsividade */
+@media (max-width: 768px) {
+    .caminhao-form-section .section-container {
+        grid-template-columns: 1fr; /* Em telas menores, uma única coluna */
+        gap: 10px;
+    }
+
+    .caminhao-form-section .field-group-row {
+        flex-direction: column; /* Em telas pequenas, empilha os campos dentro da linha */
+        align-items: stretch; /* Garante que ocupem a largura total */
+    }
+
+    .caminhao-form-section .field-group-row .form-group {
+        flex: 1 1 100%; /* Ocupa 100% da largura em telas pequenas */
+        min-width: unset; /* Remove min-width para flexibilidade total */
+    }
+}

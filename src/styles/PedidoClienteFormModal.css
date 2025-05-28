@@ -1,0 +1,178 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\styles\PedidoClienteFormModal.css */
+
+/* Reutiliza os estilos gerais do common-modal.css */
+
+/* Ajustes para a seção de Dados do Pedido (cabeçalho) */
+.modal-body .section-container {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 2 a 3 colunas padrão */
+    gap: 15px; /* Espaçamento entre os itens do grid */
+    align-items: start;
+}
+
+/* Estilos para a "tabela" de itens */
+.items-table-container {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow-x: auto; /* Adiciona scroll horizontal para tabelas em telas pequenas */
+    margin-top: 20px;
+}
+
+.items-header,
+.item-row {
+    display: grid;
+    /* Define as larguras das colunas para a "planilha" do cliente */
+    /* Qtd(70px) Produto(2fr) Preco(1fr) Total(1fr) Obs(1.5fr) Acoes(50px) */
+    grid-template-columns: 70px 2fr 1fr 1fr 1.5fr 50px; 
+    gap: 10px;
+    padding: 8px 10px;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.items-header {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+    border-bottom: 2px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.item-row {
+    background-color: #fff;
+}
+
+.item-row:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.item-row:hover {
+    background-color: #f0f0f0;
+}
+
+.item-row input[type="number"],
+.item-row input[type="text"],
+.item-row select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    height: 38px;
+}
+
+.col-total {
+    font-weight: bold;
+    text-align: right;
+}
+
+.remove-item-btn {
+    background-color: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 5px 8px;
+    font-size: 1.2em;
+    line-height: 1;
+    transition: background-color 0.2s ease;
+}
+
+.remove-item-btn:hover {
+    background-color: #a52828;
+}
+
+.add-item-btn {
+    display: block;
+    width: fit-content;
+    margin: 15px 10px;
+    padding: 8px 15px;
+    background-color: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.add-item-btn:hover {
+    background-color: #1b5e20;
+}
+
+.order-total {
+    margin: 15px 10px;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    text-align: right;
+    font-size: 1.1em;
+}
+
+/* Media Queries para Responsividade da Tabela de Itens */
+@media (max-width: 768px) {
+    .items-table-container {
+        overflow-x: auto;
+    }
+
+    .items-header,
+    .item-row {
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
+        padding: 5px 8px;
+    }
+
+    .col-produto {
+        grid-column: span 2;
+    }
+    .col-observacoes {
+        grid-column: span 3;
+    }
+    .col-acoes {
+        grid-column: span 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 500px) {
+    .items-header {
+        display: none;
+    }
+
+    .item-row {
+        grid-template-columns: 1fr;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        padding: 10px;
+        position: relative;
+    }
+
+    .item-row > div {
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+        margin-bottom: 5px;
+    }
+    .item-row > div:last-child {
+        border-bottom: none;
+    }
+
+    /* Adicionar labels para campos empilhados */
+    .item-row .col-quantidade::before { content: "Qtd: "; font-weight: bold; }
+    .item-row .col-produto::before { content: "Produto: "; font-weight: bold; }
+    .item-row .col-preco::before { content: "Preço Unit.: "; font-weight: bold; }
+    .item-row .col-total::before { content: "Total Item: "; font-weight: bold; }
+    .item-row .col-observacoes::before { content: "Obs.: "; font-weight: bold; }
+
+    .item-row .col-acoes {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        padding: 0;
+        margin: 0;
+        border: none;
+    }
+    .item-row .remove-item-btn {
+        font-size: 1em;
+        padding: 3px 6px;
+    }
+}

@@ -1,0 +1,251 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\styles\common-modal.css */
+
+/* Overlay do Modal (fundo escuro) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente escuro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que o modal fique acima de outros elementos */
+    padding: 20px; /* Para não colar nas bordas em telas pequenas */
+}
+
+/* Conteúdo do Modal */
+.modal-content {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 800px; /* AUMENTADO: Largura máxima para o modal ficar mais horizontal */
+    position: relative;
+    animation: fadeIn 0.3s ease-out; /* Animação de entrada */
+    box-sizing: border-box; /* Garante que padding e borda sejam incluídos na largura */
+    display: flex; /* Adiciona flexbox para o layout interno (header, body, actions) */
+    flex-direction: column; /* Coloca os elementos um abaixo do outro */
+    max-height: 90vh; /* Limita a altura do modal para evitar overflow em telas pequenas */
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for maior que a altura máxima */
+}
+
+/* Animação para o modal */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Cabeçalho do Modal */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    flex-shrink: 0; /* Impede que o cabeçalho encolha */
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+}
+
+/* Botão de Fechar */
+.close-button {
+    background: none;
+    border: none;
+    font-size: 1.8em;
+    color: #888;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1; /* Alinha o "x" verticalmente */
+}
+
+.close-button:hover {
+    color: #333;
+}
+
+/* ESTILOS PARA SEÇÕES DE FORMULÁRIO */
+.modal-body {
+    flex-grow: 1; /* Permite que o corpo ocupe o espaço restante e scroll */
+    overflow-y: auto; /* Scroll para o corpo do formulário se necessário */
+    padding-right: 10px; /* Espaço para a barra de rolagem não sobrepor o conteúdo */
+}
+
+.modal-body h3 {
+    font-size: 1.2em;
+    color: #01579b; /* Azul mais escuro para os títulos das seções */
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+.modal-body .section-container {
+    margin-bottom: 20px; /* Espaço após cada seção */
+    display: grid; /* NOVO: Usa Grid para organizar os campos em até 3 colunas */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* NOVO: 2 a 3 colunas, largura mínima 200px */
+    gap: 15px; /* Espaçamento entre os itens no grid */
+    align-items: end; /* Alinha os inputs na parte de baixo do grid, útil para labels de tamanhos diferentes */
+}
+
+/* Campos de formulário individuais */
+.modal-body .form-group {
+    margin-bottom: 0; /* Remove margem inferior padrão, pois o gap do grid já faz isso */
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-body label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+    white-space: nowrap; /* Evita que o label quebre a linha */
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body input[type="email"],
+.modal-body textarea, /* Adicionado para textarea */
+.modal-body select {
+    width: 100%; /* Ocupa a largura total do seu grid/flex container */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box; /* Inclui padding e borda na largura total */
+}
+
+/* Estilo específico para o campo de descrição */
+.modal-body textarea {
+    resize: vertical; /* Permite redimensionamento vertical */
+    min-height: 60px; /* Altura mínima para a descrição */
+}
+
+/* Estilo para o checkbox (se você for usar) */
+.modal-body .checkbox-group {
+    flex-direction: row; /* Alinha o checkbox e o label na mesma linha */
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px; /* Espaço acima do checkbox */
+}
+
+.modal-body .checkbox-group input[type="checkbox"] {
+    width: auto; /* Tamanho automático para o checkbox */
+    margin-top: 0;
+}
+
+/* Estilo para o label do checkbox */
+.modal-body .checkbox-group .checkbox-label {
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+
+/* Removendo .form-row e .form-group.small-input, .uf-select
+   porque o grid do .section-container agora lida com o layout */
+/*
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.form-row .form-group {
+    flex: 1;
+    min-width: 120px;
+}
+.form-row .form-group.small-input {
+    flex: 0.5;
+    min-width: 80px;
+}
+.form-row .form-group.uf-select {
+    flex: 0.5;
+    min-width: 80px;
+}
+*/
+
+/* Ações do Modal (botões) */
+.modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinha botões à direita */
+    gap: 10px; /* Espaço entre os botões */
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    flex-shrink: 0; /* Impede que as ações encolham */
+}
+
+.modal-actions button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+}
+
+.modal-actions button[type="submit"] {
+    background-color: #01579b; /* Cor primária */
+    color: #fff;
+}
+
+.modal-actions button[type="submit"]:hover:not(:disabled) {
+    background-color: #004d8c;
+}
+
+.modal-actions button[type="submit"]:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.modal-actions .cancel-button {
+    background-color: #e0e0e0; /* Cor secundária para cancelar */
+    color: #333;
+}
+
+.modal-actions .cancel-button:hover:not(:disabled) {
+    background-color: #c7c7c7;
+}
+
+/* Media Queries para Responsividade */
+@media (max-width: 850px) { /* NOVO: Breakpoint ajustado para testar 2 colunas */
+    .modal-content {
+        max-width: 95%; /* Ocupa mais largura em telas menores */
+    }
+    .modal-body .section-container {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* NOVO: 2 colunas em telas médias */
+    }
+}
+
+@media (max-width: 600px) { /* Breakpoint para telas muito pequenas (1 coluna) */
+    .modal-content {
+        padding: 15px;
+    }
+    .modal-body .section-container {
+        grid-template-columns: 1fr; /* NOVO: Uma única coluna em telas pequenas */
+        gap: 10px; /* Ajusta o espaçamento */
+    }
+    .modal-body .form-group {
+        min-width: 100%; /* Garante que ocupem a largura total */
+    }
+    /* Removido form-row aqui também, pois section-container já é grid */
+    /*
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    .form-row .form-group,
+    .form-row .form-group.small-input,
+    .form-row .form-group.uf-select {
+        min-width: 100%;
+    }
+    */
+}

@@ -1,0 +1,103 @@
+/* C:\Users\Rodrigo Ramos SSD\Desktop\ARK\sistema-ark-frontend\src\styles\common-table.css */
+
+/* Estilos gerais para tabelas */
+.common-table {
+    width: 100%;
+    border-collapse: collapse; /* Colapsa as bordas das células */
+    margin-top: 15px; /* Margem acima da tabela */
+    background-color: #fff; /* Fundo branco para a tabela */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Sombra suave */
+    border-radius: 8px; /* Cantos arredondados */
+    overflow: hidden; /* Garante que o border-radius funcione com o scrollX */
+}
+
+.common-table th,
+.common-table td {
+    border: 1px solid #ddd; /* Borda cinza clara para células */
+    padding: 12px 15px; /* Espaçamento interno */
+    text-align: left; /* Alinhamento do texto à esquerda */
+}
+
+.common-table th {
+    background-color: #f2f2f2; /* Fundo cinza claro para o cabeçalho */
+    font-weight: bold;
+    color: #555;
+}
+
+/* Estilo para linhas pares da tabela */
+.common-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; /* Fundo ligeiramente mais escuro para linhas pares */
+}
+
+.common-table tbody tr:hover {
+    background-color: #f0f0f0; /* Fundo ao passar o mouse */
+}
+
+/* Estilo para células de ação (botões) */
+.common-table td button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-right: 5px; /* Espaço entre os botões */
+    font-size: 0.9em;
+}
+
+/* Cores específicas para botões de ação */
+.common-table td .edit-button {
+    background-color: #0288d1; /* Azul para editar */
+    color: #fff;
+}
+.common-table td .edit-button:hover {
+    background-color: #01579b;
+}
+
+.common-table td .delete-button {
+    background-color: #d32f2f; /* Vermelho para excluir */
+    color: #fff;
+}
+.common-table td .delete-button:hover {
+    background-color: #a52828;
+}
+
+/* Responsividade para tabelas em telas menores (empilhar colunas) */
+@media (max-width: 768px) {
+    .common-table, 
+    .common-table thead, 
+    .common-table tbody, 
+    .common-table th, 
+    .common-table td, 
+    .common-table tr {
+        display: block; /* Faz com que todos os elementos da tabela se comportem como blocos, empilhando */
+    }
+
+    .common-table thead tr {
+        position: absolute; /* Esconde o cabeçalho original, pois os labels serão adicionados por :before */
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .common-table tr {
+        border: 1px solid #eee; /* Borda para cada "linha" empilhada */
+        margin-bottom: 15px;
+    }
+
+    .common-table td {
+        border: none; /* Remove bordas de célula */
+        border-bottom: 1px solid #eee; /* Adiciona borda na parte inferior para separar visualmente */
+        position: relative;
+        padding-left: 50%; /* Espaço para o "label" da célula */
+        text-align: right; /* Alinha o conteúdo à direita */
+    }
+
+    .common-table td:before { /* Adiciona um "label" para cada célula com base na ordem */
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap; /* Evita que o label quebre a linha */
+        text-align: left;
+        font-weight: bold;
+    }
+}

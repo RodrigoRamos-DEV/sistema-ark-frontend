@@ -1,0 +1,89 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\styles\ProdutoFormModal.css */
+
+/* Estilos específicos para o ProdutoFormModal */
+
+/* Ajustes para a seção de Dados do Produto */
+.produto-form-section .section-container {
+    /* Main grid for the section, flexible columns */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* 2 a 3 colunas, largura mínima 220px */
+    gap: 15px; /* Espaçamento entre os itens do grid (os form-groups ou field-group-rows) */
+    align-items: start; /* Alinha os itens do grid ao topo de suas células, ajuda na simetria */
+}
+
+/* O campo de Nome */
+.produto-form-section .form-group.nome-produto {
+    grid-column: span 1; /* Ocupa uma coluna */
+}
+
+/* REMOVIDO: Estilo do campo de Descrição */
+/* .produto-form-section .form-group.descricao-produto {
+    grid-column: span 1;
+    min-height: 60px;
+} */
+
+/* NOVO: Estilo para agrupar campos em uma única linha horizontal que ocupa a largura total do grid da seção */
+.produto-form-section .field-group-row {
+    grid-column: 1 / -1; /* Faz com que este grupo ocupe todas as colunas disponíveis no grid principal */
+    display: flex; /* Usa flexbox para organizar os campos internos lado a lado */
+    gap: 15px; /* Espaçamento entre os campos dentro desta linha */
+    flex-wrap: wrap; /* Permite que os campos quebrem a linha em telas menores */
+    align-items: flex-start; /* Alinha os itens flex ao topo para simetria vertical das labels */
+    justify-content: flex-start; /* Alinha os itens à esquerda */
+}
+
+.produto-form-section .field-group-row .form-group {
+    flex: 1; /* Permite que os campos cresçam e ocupem o espaço disponível igualmente */
+    min-width: 150px; /* Largura mínima para cada campo individual dentro da linha */
+    margin-bottom: 0; /* Remove margem inferior, pois o gap do flexbox cuida do espaçamento */
+}
+
+/* Assegura que todos os inputs e selects tenham altura simétrica */
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body input[type="email"],
+.modal-body select {
+    height: 38px; /* Altura fixa para inputs e selects */
+    min-height: 38px; /* Garante que não encolha */
+    box-sizing: border-box; /* Inclui padding e borda na altura total */
+}
+
+/* Removido estilo específico para textarea, pois o campo foi removido do HTML.
+   Se tiver outros textareas em outras partes, a regra geral no common-modal.css ou aqui precisa ser mantida. */
+.modal-body textarea {
+    height: auto; /* Permite que textarea se ajuste ao conteúdo */
+    min-height: 60px; /* Altura mínima para textarea */
+    box-sizing: border-box;
+    resize: vertical; /* Permite que o usuário redimensione verticalmente */
+}
+
+
+/* Estilo para o campo de Código de Barras */
+.produto-form-section .form-group.codigo-barras {
+    /* Pode ocupar uma coluna padrão do grid principal,
+       ou ajustar grid-column: span X se quiser mais largura */
+    grid-column: span 1;
+}
+
+
+/* Media Queries para Responsividade */
+@media (max-width: 768px) {
+    .produto-form-section .section-container {
+        grid-template-columns: 1fr; /* Em telas menores, uma única coluna */
+        gap: 10px;
+    }
+
+    /* REMOVIDO: Estilo de descricao-produto para media query */
+    /* .produto-form-section .form-group.descricao-produto {
+        grid-column: span 1;
+    } */
+
+    .produto-form-section .field-group-row {
+        flex-direction: column; /* Em telas pequenas, empilha os campos dentro da linha */
+        align-items: stretch; /* Garante que ocupem a largura total */
+    }
+    .produto-form-section .field-group-row .form-group {
+        flex: 1 1 100%; /* Ocupa 100% da largura em telas pequenas */
+        min-width: unset; /* Remove min-width para flexibilidade total */
+    }
+}

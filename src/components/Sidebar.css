@@ -1,0 +1,121 @@
+/* src/components/Sidebar.css */
+
+.sidebar {
+    width: 200px;
+    background-color: #01579b; /* Azul escuro */
+    color: white;
+    padding: 20px 0;
+    height: 100vh; /* Ocupa a altura total da viewport */
+    position: fixed; /* Fixa a sidebar na tela */
+    top: 0;
+    left: 0;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    overflow-y: auto; /* Permite scroll se o conteúdo for muito longo */
+}
+
+.sidebar-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    color: #e0f2f7; /* Azul claro */
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 10px;
+}
+
+.sidebar-nav a {
+    display: flex; /* Usa flexbox para alinhar texto e seta */
+    justify-content: space-between; /* Espaço entre texto e seta */
+    align-items: center; /* Alinha verticalmente */
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    transition: background-color 0.3s ease;
+    cursor: pointer; /* Indica que é clicável */
+}
+
+.sidebar-nav a:hover,
+.sidebar-nav a.active {
+    background-color: #0288d1; /* Azul mais claro ao passar o mouse ou ativo */
+}
+
+/* Estilos para o submenu */
+.sidebar-nav .submenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    background-color: #004d8c; /* Cor de fundo para o submenu */
+    /* transição para efeito de abrir/fechar suave, se desejar */
+    /* max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; */
+}
+
+.sidebar-nav .submenu li a {
+    padding-left: 35px; /* Indentação para subitens */
+    font-size: 0.95em; /* Tamanho da fonte ligeiramente menor */
+    background-color: transparent; /* Garante que o hover padrão não interfira */
+}
+
+/* Estilo para a seta do submenu */
+.sidebar-nav .arrow {
+    transition: transform 0.3s ease;
+}
+
+.sidebar-nav .arrow.open {
+    transform: rotate(90deg); /* Rotaciona a seta quando o submenu está aberto */
+}
+
+/* Media Queries para responsividade */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0; /* Sidebar some, conteúdo ocupa 100% */
+    }
+    .sidebar {
+        width: 100%; /* Sidebar ocupa toda largura */
+        height: auto; /* Altura automática */
+        position: relative; /* Não fixa mais */
+        box-shadow: none;
+        padding: 10px 0;
+    }
+    .sidebar-nav {
+        display: flex; /* Links da sidebar em linha */
+        flex-wrap: wrap; /* Quebra em múltiplas linhas */
+        justify-content: center;
+    }
+    .sidebar-nav li {
+        margin: 5px 10px;
+    }
+    .sidebar-header {
+        display: none; /* Esconde o cabeçalho da sidebar em telas pequenas */
+    }
+    /* Ajustes para o submenu em telas pequenas */
+    .sidebar-nav .has-submenu {
+        width: 100%; /* Ocupa a largura total para o item "Cadastros" */
+        text-align: center;
+    }
+    .sidebar-nav .has-submenu a {
+        justify-content: center; /* Centraliza o texto e a seta no item pai */
+        padding: 10px 0;
+    }
+    .sidebar-nav .submenu {
+        position: static; /* Não flutua mais */
+        width: 100%;
+        background-color: #004d8c; /* Cor de fundo para o submenu */
+        border-top: 1px solid rgba(255,255,255,0.2);
+    }
+    .sidebar-nav .submenu li a {
+        padding-left: 20px; /* Reduz a indentação */
+        justify-content: center; /* Centraliza os subitens */
+    }
+}
