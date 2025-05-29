@@ -1,0 +1,146 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\components\RomaneioPrintModal.css */
+
+.modal-content-print-narrow {
+    width: 250mm; /* Um pouco maior que o tamanho da página para o modal */
+    max-width: 90%;
+    /* Altura ajustada para o tamanho do romaneio + margens */
+    max-height: 90vh; /* Para que o modal caiba na tela */
+    overflow-y: auto; /* Adiciona scroll ao modal se o conteúdo for longo */
+}
+
+.print-modal-body-scroll {
+    overflow-y: auto; /* Conteúdo interno rolável */
+    padding: 10px; /* Margem interna */
+}
+
+/* Estilo para cada "página" de romaneio dentro do modal/pdf */
+.romaneio-page {
+    width: 215.9mm; /* Largura exata da página */
+    height: 110.07mm; /* Altura exata da página */
+    box-sizing: border-box; /* Inclui padding e border na dimensão */
+    padding: 5mm; /* Margem interna para o conteúdo */
+    margin: 5mm auto; /* Margem externa, centraliza no modal */
+    border: 1px solid #ccc; /* Borda para visualização no navegador */
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Para empurrar o rodapé para baixo */
+    page-break-after: auto; /* Controlado pelo html2pdf.js ou @media print */
+    overflow: hidden; /* Importante para que o conteúdo não vaze */
+}
+
+.romaneio-header {
+    text-align: center;
+    margin-bottom: 5mm;
+}
+
+.romaneio-header img {
+    max-width: 80px; /* Tamanho do logo no romaneio */
+    height: auto;
+    margin-bottom: 3mm;
+}
+
+.romaneio-header h1 {
+    font-size: 1.1em;
+    color: #01579b;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.romaneio-info {
+    font-size: 0.75em;
+    margin-bottom: 5mm;
+    text-align: center;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 3mm;
+}
+
+.romaneio-info p {
+    margin: 1px 0;
+}
+
+.items-section {
+    flex-grow: 1; /* Permite que esta seção ocupe o espaço restante */
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 3mm;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #ddd;
+    padding: 2mm 3mm;
+    text-align: left;
+    font-size: 0.7em; /* Fonte pequena para romaneio */
+    vertical-align: top;
+    white-space: normal; /* Permite quebra de texto */
+    word-wrap: break-word;
+}
+
+.items-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.romaneio-footer {
+    margin-top: 5mm;
+    font-size: 0.7em;
+    text-align: left; /* Alinha texto do rodapé à esquerda */
+    padding-top: 3mm;
+    border-top: 1px dashed #eee;
+}
+
+.romaneio-footer p {
+    margin: 2px 0;
+}
+
+/* Esconder elementos da interface de usuário ao imprimir */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        /* Define o tamanho padrão da página de impressão para este contexto */
+        /* @page { size: 215.9mm 110.07mm landscape; } */ /* Isso pode ser um pouco inconsistente entre navegadores */
+    }
+
+    .modal-overlay,
+    .modal-header,
+    .modal-actions,
+    .close-button {
+        display: none !important;
+    }
+
+    .modal-content-print-narrow {
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .print-modal-body-scroll {
+        overflow: visible !important; /* Desativa a rolagem para impressão */
+        padding: 0 !important; /* Remove padding do corpo do modal para impressão */
+    }
+
+    .romaneio-page {
+        border: none !important; /* Remove borda de visualização na impressão */
+        margin: 0 !important; /* Remove margem entre as páginas na impressão */
+        padding: 5mm !important; /* Padding interno da página impressa */
+        page-break-after: always; /* Força nova página após cada romaneio */
+        width: 215.9mm !important; /* Garante a largura exata na impressão */
+        height: 110.07mm !important; /* Garante a altura exata na impressão */
+        overflow: hidden !important; /* Esconde conteúdo que vazar */
+    }
+    .romaneio-page:last-child {
+        page-break-after: auto !important; /* Não quebra depois do último */
+    }
+}

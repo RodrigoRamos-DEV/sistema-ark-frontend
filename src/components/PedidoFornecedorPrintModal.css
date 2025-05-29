@@ -1,0 +1,193 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\components\PedidoFornecedorPrintModal.css */
+
+/* Estilos gerais para o modal de impressão */
+/* Estes estilos afetam o modal VISÍVEL na tela antes de imprimir/salvar PDF */
+.print-modal-body {
+    padding: 20px;
+    background-color: #fdfdfd;
+}
+
+.print-container {
+    padding: 15px;
+    border: 1px solid #eee;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* NOVO: Estilos para a logo e subtítulo */
+.print-header-logo {
+    display: block;
+    margin: 0 auto 10px auto; /* Centraliza a logo com margem abaixo */
+    max-width: 150px; /* Tamanho da logo */
+    height: auto;
+}
+
+.print-subtitle {
+    text-align: center;
+    font-size: 1.4em; /* Tamanho do subtítulo */
+    color: #01579b; /* Cor do subtítulo */
+    margin-bottom: 20px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #01579b; /* Borda para o subtítulo */
+}
+
+/* NOVO: Estilos para ID, Data e Status na mesma linha */
+.pedido-info-line {
+    display: flex;
+    justify-content: space-around; /* Distribui o espaço entre os itens */
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap; /* Permite quebrar em telas menores */
+    gap: 10px; /* Espaço entre os itens */
+}
+
+.pedido-info-line p {
+    margin: 0;
+    font-size: 0.95em;
+    text-align: center; /* Alinha o texto dentro de cada parágrafo */
+}
+.pedido-info-line strong {
+    color: #333; /* Cor mais neutra para os labels */
+}
+
+h2 {
+    color: #01579b;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Estilos para a tabela de itens no modal visível */
+.items-list-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-sizing: border-box;
+}
+
+.items-list-table th,
+.items-list-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    font-size: 0.85em;
+    white-space: nowrap; /* Tenta manter o conteúdo na mesma linha */
+}
+
+.items-list-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #555;
+}
+
+.items-list-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.items-list-table tr:hover {
+    background-color: #f0f0f0;
+}
+
+.total-info {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 2px solid #01579b;
+    text-align: right;
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #01579b;
+}
+
+/* Estilos para os botões no modal de impressão */
+.modal-actions .print-button,
+.modal-actions .save-pdf-button {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.2s ease;
+    margin-right: 10px;
+}
+
+.modal-actions .print-button {
+    background-color: #007bff; /* Azul para imprimir */
+    color: white;
+}
+.modal-actions .print-button:hover {
+    background-color: #0056b3;
+}
+
+.modal-actions .save-pdf-button {
+    background-color: #28a745; /* Verde para salvar PDF */
+    color: white;
+}
+.modal-actions .save-pdf-button:hover {
+    background-color: #218838;
+}
+
+/* Esconder elementos de interface de usuário ao imprimir (para print nativo e html2pdf) */
+@media print {
+    .modal-overlay,
+    .modal-actions,
+    .close-button {
+        display: none !important;
+    }
+
+    .modal-content.modal-content-full-width {
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        flex-direction: column !important;
+    }
+
+    .print-modal-body {
+        padding: 0 !important;
+    }
+
+    .print-container {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 20mm !important; /* Margens de impressão */
+        margin: 0 !important;
+        width: auto !important;
+    }
+
+    /* Assegura que a tabela e suas linhas se ajustem à página e quebrem corretamente */
+    .items-list-table {
+        width: 100% !important;
+        table-layout: fixed !important;
+    }
+
+    .items-list-table th,
+    .items-list-table td {
+        white-space: normal !important; /* Permite quebras de linha dentro das células */
+        word-wrap: break-word; /* Quebra palavras longas */
+    }
+
+    .items-list-table tr {
+        page-break-inside: avoid; /* Tenta evitar quebra de página dentro da linha da tabela */
+    }
+
+    /* Ajustes de fonte e espaçamento para impressão */
+    body {
+        font-size: 10pt; /* Fonte base menor para impressão */
+    }
+    h1 { font-size: 20pt !important; }
+    h2 { font-size: 16pt !important; }
+    h3 { font-size: 12pt !important; }
+    p { font-size: 9pt !important; }
+}

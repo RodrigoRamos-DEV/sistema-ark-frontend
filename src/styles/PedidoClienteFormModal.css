@@ -1,178 +1,157 @@
 /* C:\Users\Rodrigo Ramos
 SSD\Desktop\ARK\sistema-ark-frontend\src\styles\PedidoClienteFormModal.css */
 
-/* Reutiliza os estilos gerais do common-modal.css */
-
-/* Ajustes para a seção de Dados do Pedido (cabeçalho) */
-.modal-body .section-container {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 2 a 3 colunas padrão */
-    gap: 15px; /* Espaçamento entre os itens do grid */
-    align-items: start;
+/* Geral para o modal de formulário */
+.modal-content-wide {
+    width: 90%; /* Largura maior para acomodar a planilha */
+    max-width: 900px; /* Largura máxima */
 }
 
-/* Estilos para a "tabela" de itens */
-.items-table-container {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    overflow-x: auto; /* Adiciona scroll horizontal para tabelas em telas pequenas */
-    margin-top: 20px;
+/* Container da planilha de itens */
+.items-spreadsheet-container {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden; /* Esconde overflow para cantos arredondados */
 }
 
-.items-header,
+/* Cabeçalho da planilha de itens */
+.items-spreadsheet-header {
+    display: grid;
+    /* Define colunas para Produto (2fr), Quantidade (1fr), Preço Unitário (1fr), Ações (auto) */
+    grid-template-columns: 2fr 1fr 1fr auto; 
+    padding: 10px;
+    background-color: #f2f2f2;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    text-align: center; /* Centraliza o texto dos cabeçalhos */
+}
+
+.items-spreadsheet-header > div {
+    padding: 0 5px; /* Espaçamento interno */
+}
+
+/* Corpo da planilha de itens */
+.items-spreadsheet-body {
+    max-height: 400px; /* Altura máxima para rolagem da planilha */
+    overflow-y: auto; /* Adiciona rolagem vertical quando o conteúdo excede */
+}
+
+/* Estilo de cada linha de item */
 .item-row {
     display: grid;
-    /* Define as larguras das colunas para a "planilha" do cliente */
-    /* Qtd(70px) Produto(2fr) Preco(1fr) Total(1fr) Obs(1.5fr) Acoes(50px) */
-    grid-template-columns: 70px 2fr 1fr 1fr 1.5fr 50px; 
-    gap: 10px;
-    padding: 8px 10px;
+    grid-template-columns: 2fr 1fr 1fr auto; 
     align-items: center;
+    padding: 5px 10px;
     border-bottom: 1px solid #eee;
 }
 
-.items-header {
-    background-color: #f2f2f2;
-    font-weight: bold;
-    color: #555;
-    border-bottom: 2px solid #ddd;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-}
-
-.item-row {
-    background-color: #fff;
-}
-
 .item-row:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #f9f9f9; /* Linhas zebradas */
 }
 
-.item-row:hover {
-    background-color: #f0f0f0;
+/* Estilo das células */
+.item-row .cell {
+    padding: 5px;
 }
 
-.item-row input[type="number"],
-.item-row input[type="text"],
-.item-row select {
+.item-row .cell input,
+.item-row .cell select {
     width: 100%;
-    padding: 6px;
+    padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box;
-    height: 38px;
+    box-sizing: border-box; /* Inclui padding e border na largura total */
 }
 
-.col-total {
-    font-weight: bold;
-    text-align: right;
+.item-row .cell input[type="number"] {
+    text-align: right; /* Alinha números à direita */
+}
+
+.item-row .cell.col-actions {
+    text-align: center;
 }
 
 .remove-item-btn {
-    background-color: #d32f2f;
+    background-color: #dc3545; /* Vermelho para remover */
     color: white;
     border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    padding: 5px 8px;
+    border-radius: 50%; /* Botão redondo */
+    width: 30px;
+    height: 30px;
     font-size: 1.2em;
-    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto; /* Centraliza */
     transition: background-color 0.2s ease;
 }
 
 .remove-item-btn:hover {
-    background-color: #a52828;
+    background-color: #c82333;
 }
 
-.add-item-btn {
+/* Botão adicionar mais itens */
+.add-item-row-btn {
     display: block;
-    width: fit-content;
-    margin: 15px 10px;
-    padding: 8px 15px;
-    background-color: #2e7d32;
+    width: fit-content; /* Ajusta a largura ao conteúdo */
+    margin: 15px auto 0 auto; /* Centraliza o botão abaixo da planilha */
+    padding: 10px 20px;
+    background-color: #28a745; /* Verde */
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 0.9em;
     transition: background-color 0.2s ease;
 }
 
-.add-item-btn:hover {
-    background-color: #1b5e20;
+.add-item-row-btn:hover {
+    background-color: #218838;
 }
 
+/* Total do pedido */
 .order-total {
-    margin: 15px 10px;
-    padding: 10px;
-    border-top: 1px solid #eee;
     text-align: right;
-    font-size: 1.1em;
+    margin-top: 20px;
+    font-size: 1.2em;
+    color: #01579b;
 }
 
-/* Media Queries para Responsividade da Tabela de Itens */
+/* Responsividade */
 @media (max-width: 768px) {
-    .items-table-container {
-        overflow-x: auto;
+    .modal-content-wide {
+        width: 95%;
+        max-width: 95%;
     }
 
-    .items-header,
+    .items-spreadsheet-header,
     .item-row {
-        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
-        padding: 5px 8px;
+        /* Muda para empilhar as colunas em telas menores */
+        grid-template-columns: 1fr; /* Uma única coluna */
+        gap: 5px;
+        padding: 5px;
     }
 
-    .col-produto {
-        grid-column: span 2;
-    }
-    .col-observacoes {
-        grid-column: span 3;
-    }
-    .col-acoes {
-        grid-column: span 1;
-        text-align: center;
-    }
-}
-
-@media (max-width: 500px) {
-    .items-header {
-        display: none;
+    .items-spreadsheet-header > div {
+        text-align: left; /* Alinha cabeçalhos à esquerda */
     }
 
-    .item-row {
-        grid-template-columns: 1fr;
-        border: 1px solid #ddd;
-        margin-bottom: 10px;
-        padding: 10px;
-        position: relative;
+    .item-row .cell {
+        margin-bottom: 5px; /* Espaço entre campos empilhados */
     }
 
-    .item-row > div {
-        text-align: left;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-        margin-bottom: 5px;
-    }
-    .item-row > div:last-child {
-        border-bottom: none;
+    .item-row .cell input,
+    .item-row .cell select {
+        font-size: 0.9em; /* Reduz a fonte nos inputs */
     }
 
-    /* Adicionar labels para campos empilhados */
-    .item-row .col-quantidade::before { content: "Qtd: "; font-weight: bold; }
-    .item-row .col-produto::before { content: "Produto: "; font-weight: bold; }
-    .item-row .col-preco::before { content: "Preço Unit.: "; font-weight: bold; }
-    .item-row .col-total::before { content: "Total Item: "; font-weight: bold; }
-    .item-row .col-observacoes::before { content: "Obs.: "; font-weight: bold; }
-
-    .item-row .col-acoes {
-        position: absolute;
-        top: 5px;
-        right: 5px;
-        padding: 0;
-        margin: 0;
-        border: none;
+    .item-row .cell.col-actions {
+        text-align: right; /* Botão de remover no canto direito */
     }
-    .item-row .remove-item-btn {
-        font-size: 1em;
-        padding: 3px 6px;
+
+    .remove-item-btn {
+        margin: 0; /* Remove margem para se ajustar melhor */
     }
 }

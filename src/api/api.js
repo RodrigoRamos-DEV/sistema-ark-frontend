@@ -1,18 +1,15 @@
 // C:\Users\Rodrigo Ramos SSD\Desktop\ARK\sistema-ark-frontend\src\api\api.js
 import axios from 'axios';
-
 const API_BASE_URL = 'http://localhost:3001';
 
 // --- Funções da API REAL (Para interagir com o Backend) ---
-// ATUALIZADA: Função para obter a lista de clientes do backend
+// Função para obter a lista de clientes do backend
 export const getClientes = async () => {
     try {
         const response = await axios.get(`${API_BASE_URL}/api/clientes`);
-        // Garante que response.data é um array, mesmo que a API retorne null ou undefined
-        return response.data || []; 
+        return response.data || [];
     } catch (error) {
         console.error('Erro ao buscar clientes:', error.response ? error.response.data : error.message);
-        // Em caso de erro, lança o erro, mas também retorna um array vazio para evitar 'undefined' na chamada
         throw error.response ? error.response.data : new Error('Erro ao buscar clientes');
     }
 };
@@ -28,7 +25,7 @@ export const createCliente = async (clienteData) => {
     }
 };
 
-// NOVA FUNÇÃO: Atualizar um cliente existente
+// Função para atualizar um cliente existente
 export const updateCliente = async (id, clienteData) => {
     try {
         const response = await axios.put(`${API_BASE_URL}/api/clientes/${id}`, clienteData);
@@ -39,7 +36,7 @@ export const updateCliente = async (id, clienteData) => {
     }
 };
 
-// NOVA FUNÇÃO: Excluir um cliente
+// Função para excluir um cliente
 export const deleteCliente = async (id) => {
     try {
         await axios.delete(`${API_BASE_URL}/api/clientes/${id}`);
@@ -50,23 +47,13 @@ export const deleteCliente = async (id) => {
     }
 };
 
-// --- Funções Mockadas Antigas (se ainda precisar delas para outras partes) ---
-// Remova ou comente estas funções conforme for criando as rotas reais no backend
-// e os componentes passarem a usar as funções da API REAL.
 
-// Exemplo de como era a função mockada de getProdutos
-export const getProdutos = async () => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            resolve({
-                data: [
-                    { id: 'prod001', nome: 'Produto X', descricao: 'Descrição do Produto X', preco: 100.50, estoque: 50 },
-                    { id: 'prod002', nome: 'Produto Y', descricao: 'Descrição do Produto Y', preco: 25.00, estoque: 120 }
-                ]
-            });
-        }, 500);
-    });
-};
+// --- Funções Mockadas Antigas (algumas permanecerão, outras serão removidas/movidas) ---
+// REMOVIDA: A função mockada getProdutos foi removida daqui.
+// A função getFornecedores (mockada) permanece aqui por enquanto, pois o modulo Fornecedores usa fornecedores-api.js
+// A função getCaminhoes (mockada) permanece aqui por enquanto, pois o modulo Caminhoes usa caminhoes-api.js
+// A função getPedidos (mockada) e addPedido (mockada) permanecem aqui, pois o modulo PedidosCliente usa.
+
 
 export const getFornecedores = async () => {
     return new Promise(resolve => {
@@ -74,7 +61,7 @@ export const getFornecedores = async () => {
             resolve({
                 data: [
                     { id: 'forn001', nome: 'Fornecedor Alpha', contato: 'forn@alpha.com', telefone: '1130304040' },
-                    { id: 'forn002', nome: 'Fornecedor Beta', contato: '2190908080', telefone: '2190908080' }
+                    { id: 'forn002', nome: 'Fornecedor Beta', contato: 'forn@beta.com', telefone: '2190908080' }
                 ]
             });
         }, 500);

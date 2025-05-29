@@ -1,0 +1,152 @@
+/* C:\Users\Rodrigo Ramos
+SSD\Desktop\ARK\sistema-ark-frontend\src\components\NotaPrintModal.css */
+
+.modal-content-print-narrow {
+    width: 250mm; /* Um pouco maior que o tamanho da página para o modal */
+    max-width: 90%;
+    max-height: 90vh; /* Para que o modal caiba na tela */
+    overflow-y: auto;
+}
+
+.print-modal-body-scroll {
+    overflow-y: auto;
+    padding: 10px;
+}
+
+/* Estilo para cada "página" de nota dentro do modal/pdf */
+.nota-page {
+    width: 215.9mm; /* Largura exata da página */
+    height: 110.07mm; /* Altura exata da página */
+    box-sizing: border-box;
+    padding: 5mm; /* Margem interna para o conteúdo */
+    margin: 5mm auto; /* Margem externa, centraliza no modal */
+    border: 1px solid #ccc; /* Borda para visualização no navegador */
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: auto; /* Controlado pelo html2pdf.js ou @media print */
+    overflow: hidden;
+}
+
+.nota-header {
+    text-align: center;
+    margin-bottom: 5mm;
+}
+
+.nota-header img {
+    max-width: 80px;
+    height: auto;
+    margin-bottom: 3mm;
+}
+
+.nota-header h1 {
+    font-size: 1.1em;
+    color: #01579b;
+    margin: 0;
+    text-transform: uppercase;
+}
+
+.nota-info {
+    font-size: 0.75em;
+    margin-bottom: 5mm;
+    text-align: center;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 3mm;
+}
+
+.nota-info p {
+    margin: 1px 0;
+}
+
+.items-section {
+    flex-grow: 1;
+}
+
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 3mm;
+}
+
+.items-table th,
+.items-table td {
+    border: 1px solid #ddd;
+    padding: 2mm 3mm;
+    text-align: left;
+    font-size: 0.7em;
+    vertical-align: top;
+    white-space: normal;
+    word-wrap: break-word;
+}
+
+.items-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.nota-total {
+    text-align: right;
+    margin-top: 5mm;
+    font-size: 0.85em; /* Ligeiramente menor que o romaneio */
+    font-weight: bold;
+    padding-top: 3mm;
+    border-top: 1px dashed #eee;
+}
+
+.nota-footer {
+    margin-top: 5mm;
+    font-size: 0.7em;
+    text-align: left;
+    padding-top: 3mm;
+    border-top: 1px dashed #eee;
+}
+
+.nota-footer p {
+    margin: 2px 0;
+}
+
+/* Esconder elementos da interface de usuário ao imprimir */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+
+    .modal-overlay,
+    .modal-header,
+    .modal-actions,
+    .close-button {
+        display: none !important;
+    }
+
+    .modal-content-print-narrow {
+        width: auto !important;
+        max-width: none !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .print-modal-body-scroll {
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+
+    .nota-page {
+        border: none !important;
+        margin: 0 !important;
+        padding: 5mm !important;
+        page-break-after: always;
+        width: 215.9mm !important;
+        height: 110.07mm !important;
+        overflow: hidden !important;
+    }
+    .nota-page:last-child {
+        page-break-after: auto !important;
+    }
+}

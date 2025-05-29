@@ -12,6 +12,7 @@ import Fornecedores from './pages/Fornecedores';
 import Caminhoes from './pages/Caminhoes';
 import PedidosFornecedor from './pages/PedidosFornecedor'; // IMPORTA A NOVA PÁGINA
 import Romaneios from './pages/Romaneios';
+
 import './App.css';
 
 function App() {

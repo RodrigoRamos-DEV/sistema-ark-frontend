@@ -1,110 +1,214 @@
 // C:\Users\Rodrigo Ramos
 // SSD\Desktop\ARK\sistema-ark-frontend\src\pages\PedidosCliente.jsx
 import React, { useState, useEffect } from 'react';
-// Importa apenas as funções mockadas de Pedidos e Produtos que existem no api.js
-import { getPedidos, getProdutos } from '../api/api'; 
+import { getPedidosCliente, deletePedidoCliente } from '../api/pedidos-cliente-api'; // API real de pedidos de cliente
 import LoadingSpinner from '../components/LoadingSpinner';
+import PedidoClienteFormModal from '../components/PedidoClienteFormModal'; // Novo modal de formulário
+import RomaneioPrintModal from '../components/RomaneioPrintModal'; // NOVO: Importar RomaneioPrintModal
+import NotaPrintModal from '../components/NotaPrintModal';       // NOVO: Importar NotaPrintModal
+// import PlanilhaGeralPrintModal from '../components/PlanilhaGeralPrintModal'; // Será criado na próxima fase
 import '../components/LoadingSpinner.css';
 import '../styles/common-table.css';
 
-// Função auxiliar para formatar preço
+// Função auxiliar para formatar data e preço
+const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+};
 const formatPrice = (value) => {
     return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
 function PedidosCliente() {
     const [pedidos, setPedidos] = useState([]);
-    const [produtos, setProdutos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [message, setMessage] = useState(null); // Para mensagens de sucesso/erro do pedido
+    const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+    const [pedidoToEdit, setPedidoToEdit] = useState(null);
+    const [actionMessage, setActionMessage] = useState(null);
+    const [selectedPedidos, setSelectedPedidos] = useState({}); // Stores { pedidoId: true/false }
+    const [searchTerm, setSearchTerm] = useState("");
+    
+    const today = new Date().toISOString().split('T')[0];
+    const [filterStartDate, setFilterStartDate] = useState(today);
+    const [filterEndDate, setFilterEndDate] = useState(today);
 
-    // Estado para o novo pedido (apenas mockado para exibição, sem funcionalidade de salvar real por enquanto)
-    const [newPedido, setNewPedido] = useState({
-        cliente: 'Cliente Teste (Mock)', // Mockando cliente por enquanto
-        produto: '',
-        quantidade: 1,
-        valorTotal: 0,
-        data: new Date().toISOString().split('T')[0], // Data atual
-    });
+    // Estados para controlar a abertura dos modais de impressão
+    const [isRomaneioModalOpen, setIsRomaneioModalOpen] = useState(false);
+    const [isNotaModalOpen, setIsNotaModalOpen] = useState(false);
+    const [isPlanilhaGeralModalOpen, setIsPlanilhaGeralModalOpen] = useState(false);
+    const [pedidosParaImpressao, setPedidosParaImpressao] = useState([]); // Array de objetos de pedidos completos para os modais de impressão
+
+    const fetchPedidos = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getPedidosCliente();
+            setPedidos(data);
+        } catch (err) {
+            console.error("Erro ao buscar pedidos de cliente:", err);
+            setError("Erro ao carregar pedidos de cliente. Tente novamente.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // getPedidos e getProdutos ainda são mockadas no api.js principal
-                const [pedidosData, produtosData] = await Promise.all([
-                    getPedidos('client'), // Função mockada
-                    getProdutos() // Função mockada
-                ]);
-                setPedidos(pedidosData.data);
-                setProdutos(produtosData.data);
-            } catch (err) {
-                console.error("Erro ao carregar dados:", err);
-                setError("Erro ao carregar pedidos ou produtos. Tente novamente.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
+        fetchPedidos();
     }, []);
 
-    // Lida com a mudança nos campos do formulário de pedido (mockado)
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setNewPedido(prevPedido => ({
-            ...prevPedido,
-            [name]: value
-        }));
+    const handleOpenCreateModal = () => {
+        setPedidoToEdit(null);
+        setIsFormModalOpen(true);
     };
 
-    // Lida com o envio do formulário de pedido (mockado)
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setMessage(null);
-        // Validação de um pedido por dia por cliente (mockado)
-        const today = new Date().toISOString().split('T')[0];
-        const hasOrderToday = pedidos.some(
-            (pedido) =>
-            pedido.cliente === newPedido.cliente &&
-            pedido.data === today
+    const handleOpenEditModal = (pedido) => {
+        setPedidoToEdit(pedido);
+        setIsFormModalOpen(true);
+    };
+
+    const handleCloseFormModal = () => {
+        setIsFormModalOpen(false);
+        setPedidoToEdit(null);
+    };
+
+    const handlePedidoSaved = () => {
+        fetchPedidos();
+        handleCloseFormModal();
+        setActionMessage('Pedido de Cliente salvo com sucesso!');
+        setTimeout(() => setActionMessage(null), 3000);
+    };
+
+    const handleDeletePedido = async (id, clienteNome) => {
+        if (window.confirm(`Tem certeza que deseja excluir o pedido do cliente ${clienteNome} (ID: ${id})?`)) {
+            try {
+                await deletePedidoCliente(id);
+                setActionMessage(`Pedido de Cliente (ID: ${id}) excluído com sucesso!`);
+                fetchPedidos();
+                setTimeout(() => setActionMessage(null), 3000);
+            } catch (err) {
+                console.error('Erro ao excluir pedido de cliente:', err);
+                const errorMessage = err.error || err.message || 'Erro desconhecido.';
+                setActionMessage(`Erro ao excluir pedido de cliente. Detalhes: ${errorMessage}`);
+                setTimeout(() => setActionMessage(null), 5000);
+            }
+        }
+    };
+
+    // Lógica para seleção de pedidos
+    const handleSelectPedido = (id) => {
+        setSelectedPedidos(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const handleSelectAll = () => {
+        const allSelected = filteredPedidos.every(pedido => selectedPedidos[pedido.id]);
+        const newSelected = {};
+        if (!allSelected) {
+            filteredPedidos.forEach(pedido => {
+                newSelected[pedido.id] = true;
+            });
+        }
+        setSelectedPedidos(newSelected);
+    };
+
+    const handleDeselectAll = () => {
+        setSelectedPedidos({});
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleFilterStartDateChange = (e) => {
+        setFilterStartDate(e.target.value);
+    };
+
+    const handleFilterEndDateChange = (e) => {
+        setFilterEndDate(e.target.value);
+    };
+
+    const filteredPedidos = pedidos.filter(pedido => {
+        const pedidoDate = pedido.data_pedido;
+        const dateMatch = (pedidoDate >= filterStartDate && pedidoDate <= filterEndDate);
+        
+        const lowerCaseSearchTerm = searchTerm.toLowerCase();
+        const searchMatch = (
+            (pedido.cliente && pedido.cliente.nome.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (pedido.status && pedido.status.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            (pedido.itens && pedido.itens.some(item =>
+                item.produto &&
+                item.produto.nome.toLowerCase().includes(lowerCaseSearchTerm)
+            )) ||
+            String(pedido.id).toLowerCase().includes(lowerCaseSearchTerm)
         );
-        if (hasOrderToday) {
-            setMessage("Erro: Já existe um pedido para este cliente hoje.");
+        return dateMatch && searchMatch;
+    });
+
+    const totalLucroPeriodo = filteredPedidos.reduce((total, pedido) => {
+        return total + (parseFloat(pedido.valor_lucro_total) || 0);
+    }, 0);
+
+    const totalVendaPeriodo = filteredPedidos.reduce((total, pedido) => {
+        return total + (parseFloat(pedido.valor_venda_total) || 0);
+    }, 0);
+
+    // Funções para abrir modais de impressão
+    const handleOpenRomaneioModal = () => {
+        const selected = filteredPedidos.filter(pedido => selectedPedidos[pedido.id]);
+        if (selected.length === 0) {
+            alert('Selecione pelo menos um pedido para imprimir o romaneio.');
             return;
         }
-
-        // Calcula valor total (mockado)
-        const selectedProduct = produtos.find(p => p.nome === newPedido.produto);
-        const calculatedValue = selectedProduct ? selectedProduct.preco * newPedido.quantidade : 0;
-        const finalPedido = { ...newPedido, valorTotal: calculatedValue };
-
-        // Simula o salvamento (mockado)
-        // Em um sistema real, aqui você chamaria uma API createPedidoCliente
-        // const pedidoCriado = await createPedidoCliente(finalPedido);
-
-        // Apenas adiciona ao estado local para visualização
-        const mockId = `ped${Math.random().toString(16).slice(2, 8)}`;
-        const mockPedidoSalvo = { ...finalPedido, id: mockId, status: 'Pendente' };
-
-        setPedidos(prevPedidos => [...prevPedidos, mockPedidoSalvo]);
-        setMessage(`Pedido ${mockId} para ${finalPedido.cliente} criado com sucesso (Mock)!`);
-
-        // Limpa o formulário, exceto o nome do cliente mockado
-        setNewPedido(prevPedido => ({
-            ...prevPedido,
-            produto: '',
-            quantidade: 1,
-            valorTotal: 0,
-            data: new Date().toISOString().split('T')[0],
-        }));
+        setPedidosParaImpressao(selected);
+        setIsRomaneioModalOpen(true);
     };
+
+    const handleCloseRomaneioModal = () => {
+        setIsRomaneioModalOpen(false);
+        setPedidosParaImpressao([]);
+        setSelectedPedidos({}); // Desseleciona todos os pedidos após fechar o modal
+    };
+
+    const handleOpenNotaModal = () => {
+        const selected = filteredPedidos.filter(pedido => selectedPedidos[pedido.id]);
+        if (selected.length === 0) {
+            alert('Selecione pelo menos um pedido para imprimir a nota.');
+            return;
+        }
+        setPedidosParaImpressao(selected);
+        setIsNotaModalOpen(true);
+    };
+
+    const handleCloseNotaModal = () => {
+        setIsNotaModalOpen(false);
+        setPedidosParaImpressao([]);
+        setSelectedPedidos({}); // Desseleciona todos os pedidos após fechar o modal
+    };
+
+    const handleOpenPlanilhaGeralModal = () => {
+        // Para a planilha geral, não precisa de seleção, vai usar os pedidos filtrados pelo dia
+        // A lógica de agregação por dia será dentro do modal de planilha
+        const pedidosDoDiaFiltrado = filteredPedidos.filter(p => p.data_pedido === filterStartDate); // Ou outro critério de "dia"
+        
+        if (pedidosDoDiaFiltrado.length === 0) {
+            alert('Nenhum pedido encontrado para a data selecionada para gerar a planilha geral.');
+            return;
+        }
+        setPedidosParaImpressao(pedidosDoDiaFiltrado);
+        setIsPlanilhaGeralModalOpen(true);
+    };
+
+    const handleClosePlanilhaGeralModal = () => {
+        setIsPlanilhaGeralModalOpen(false);
+        setPedidosParaImpressao([]);
+        // Não reseta selectedPedidos aqui, pois a planilha geral não depende de seleção por checkbox
+    };
+
 
     if (loading) {
         return <LoadingSpinner />;
     }
-
     if (error) {
         return <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>;
     }
@@ -112,102 +216,162 @@ function PedidosCliente() {
     return (
         <div>
             <h1>Pedidos do Cliente</h1>
-            <p>Aqui você pode ver e gerenciar seus pedidos.</p>
-            <h2>Fazer Novo Pedido</h2>
-            {message && (
-                <div style={{
-                    padding: '10px',
-                    margin: '10px 0',
-                    borderRadius: '5px',
-                    backgroundColor: message.includes('sucesso') ? '#d4edda' : '#f8d7da',
-                    color: message.includes('sucesso') ? '#155724' : '#721c24',
-                    borderColor: message.includes('sucesso') ? '#c3e6cb' : '#f5c6cb',
-                    border: '1px solid'
-                }}>
-                    {message}
-                </div>
-            )}
-            <form onSubmit={handleSubmit} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', maxWidth: '600px', margin: '0 auto 20px auto' }}>
-                <div style={{ marginBottom: '10px' }}>
-                    <label htmlFor="cliente" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Cliente:</label>
-                    <input
-                        type="text"
-                        id="cliente"
-                        name="cliente"
-                        value={newPedido.cliente}
-                        onChange={handleChange}
-                        readOnly // Cliente mockado por enquanto
-                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '4px', backgroundColor: '#e9e9e9' }}
-                    />
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                    <label htmlFor="produto" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Produto:</label>
-                    <select
-                        id="produto"
-                        name="produto"
-                        value={newPedido.produto}
-                        onChange={handleChange}
-                        required
-                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '4px' }}
-                    >
-                        <option value="">Selecione um Produto</option>
-                        {produtos.map(prod => (
-                            <option key={prod.id} value={prod.nome}>{prod.nome} (R${prod.preco_venda.toFixed(2)})</option>
-                        ))}
-                    </select>
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                    <label htmlFor="quantidade" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Quantidade:</label>
-                    <input
-                        type="number"
-                        id="quantidade"
-                        name="quantidade"
-                        value={newPedido.quantidade}
-                        onChange={handleChange}
-                        min="1"
-                        required
-                        style={{ width: '100%', padding: '8px', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '4px' }}
-                    />
-                </div>
-                <button type="submit" style={{ padding: '10px 20px', backgroundColor: '#01579b', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1em' }}>
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                {actionMessage && (
+                    <div style={{
+                        padding: '10px',
+                        borderRadius: '5px',
+                        backgroundColor: actionMessage.includes('sucesso') ? '#d4edda' : '#f8d7da',
+                        color: actionMessage.includes('sucesso') ? '#155724' : '#721c24',
+                        border: '1px solid',
+                        flexGrow: 1,
+                        marginBottom: '10px'
+                    }}>
+                        {actionMessage}
+                    </div>
+                )}
+                <button
+                    onClick={handleOpenCreateModal}
+                    style={{ padding: '10px 20px', backgroundColor: '#01579b', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer', fontSize: '1em' }}
+                >
                     Realizar Pedido
                 </button>
-            </form>
-            <h3>Seus Pedidos Atuais</h3>
+            </div>
+            <h2>Lista de Pedidos</h2>
+            <p>Gerenciamento de pedidos dos clientes.</p>
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div className="filter-group">
+                    <label htmlFor="filterStartDate">Período Inicial: </label>
+                    <input
+                        type="date"
+                        id="filterStartDate"
+                        name="filterStartDate"
+                        value={filterStartDate}
+                        onChange={handleFilterStartDateChange}
+                        style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
+                    />
+                </div>
+                <div className="filter-group">
+                    <label htmlFor="filterEndDate">Período Final: </label>
+                    <input
+                        type="date"
+                        id="filterEndDate"
+                        name="filterEndDate"
+                        value={filterEndDate}
+                        onChange={handleFilterEndDateChange}
+                        style={{ padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }}
+                    />
+                </div>
+                <div className="search-group" style={{ flexGrow: 1 }}>
+                    <input
+                        type="text"
+                        placeholder="Pesquisar pedidos..."
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        style={{ padding: '8px', width: '100%', borderRadius: '5px', border: '1px solid #ccc' }}
+                    />
+                </div>
+            </div>
+
+            {/* Ações de seleção e impressão */}
+            <div style={{ marginBottom: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button className="secondary-button" onClick={handleSelectAll}>Selecionar Todos</button>
+                <button className="secondary-button" onClick={handleDeselectAll}>Desmarcar Todos</button>
+                
+                <button className="print-button" onClick={handleOpenRomaneioModal} disabled={Object.keys(selectedPedidos).length === 0}>Imprimir Romaneio</button>
+                <button className="print-button" onClick={handleOpenNotaModal} disabled={Object.keys(selectedPedidos).length === 0}>Imprimir Nota</button>
+                <button className="print-button" onClick={handleOpenPlanilhaGeralModal}>Imprimir Planilha Geral do Dia</button>
+            </div>
+
             <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+                <table className="common-table">
                     <thead>
-                        <tr style={{ backgroundColor: '#f2f2f2' }}>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>ID</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Cliente</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Produto</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Quantidade</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Valor Total</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Data</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'left' }}>Status</th>
+                        <tr>
+                            <th style={{ width: '30px' }}></th> {/* Coluna para o checkbox */}
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Valor de Custo</th>
+                            <th>Valor de Lucro</th>
+                            <th>Valor Total da Venda</th>
+                            <th>Status</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {pedidos.length > 0 ? (
-                            pedidos.map(pedido => (
-                                <tr key={pedido.id} style={{ '&:nth-child(even)': { backgroundColor: '#f9f9f9' } }}>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.id}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.cliente}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.produto}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.quantidade}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>R$ {pedido.valorTotal ? pedido.valorTotal.toFixed(2) : '0.00'}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.data}</td>
-                                    <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pedido.status}</td>
+                        {filteredPedidos.length > 0 ? (
+                            filteredPedidos.map(pedido => (
+                                <tr key={pedido.id}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={!!selectedPedidos[pedido.id]}
+                                            onChange={() => handleSelectPedido(pedido.id)}
+                                        />
+                                    </td>
+                                    <td>{formatDate(pedido.data_pedido)}</td>
+                                    <td>{pedido.cliente ? pedido.cliente.nome : 'N/A'}</td>
+                                    <td>{formatPrice(pedido.valor_custo_total)}</td>
+                                    <td>{formatPrice(pedido.valor_lucro_total)}</td>
+                                    <td>{formatPrice(pedido.valor_venda_total)}</td>
+                                    <td>{pedido.status}</td>
+                                    <td>
+                                        <button
+                                            onClick={() => handleOpenEditModal(pedido)}
+                                            className="edit-button"
+                                        >
+                                            Editar
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeletePedido(pedido.id, pedido.cliente ? pedido.cliente.nome : 'N/A')}
+                                            className="delete-button"
+                                        >
+                                            Excluir
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7" style={{ border: '1px solid #ddd', padding: '8px', textAlign: 'center' }}>Nenhum pedido encontrado.</td>
+                                <td colSpan="8" style={{ textAlign: 'center' }}>
+                                    {searchTerm || filterStartDate !== today || filterEndDate !== today ? 'Nenhum pedido encontrado com os filtros aplicados.' : 'Nenhum pedido cadastrado ainda.'}
+                                </td>
                             </tr>
                         )}
                     </tbody>
                 </table>
             </div>
+            {/* Rodapé com totais de lucro e venda */}
+            <div className="table-footer-total" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px' }}>
+                <strong>Total de Lucro no Período:</strong> {formatPrice(totalLucroPeriodo)}
+                <strong>Total de Venda no Período:</strong> {formatPrice(totalVendaPeriodo)}
+            </div>
+
+            {/* Modal de formulário para Pedidos do Cliente */}
+            <PedidoClienteFormModal
+                isOpen={isFormModalOpen}
+                onClose={handleCloseFormModal}
+                onPedidoSaved={handlePedidoSaved}
+                pedidoToEdit={pedidoToEdit}
+            />
+
+            {/* Modais de impressão */}
+            <RomaneioPrintModal
+                isOpen={isRomaneioModalOpen}
+                onClose={handleCloseRomaneioModal}
+                selectedPedidos={pedidosParaImpressao}
+            />
+            <NotaPrintModal
+                isOpen={isNotaModalOpen}
+                onClose={handleCloseNotaModal}
+                selectedPedidos={pedidosParaImpressao}
+            />
+            {/* PlanilhaGeralPrintModal será adicionado aqui em breve */}
+            {/* <PlanilhaGeralPrintModal
+                isOpen={isPlanilhaGeralModalOpen}
+                onClose={handleClosePlanilhaGeralModal}
+                pedidosDoDia={pedidosParaImpressao}
+                selectedDate={filterStartDate} // Passa a data selecionada para a planilha
+            /> */}
         </div>
     );
 }

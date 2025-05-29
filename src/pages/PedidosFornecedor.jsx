@@ -1,12 +1,13 @@
-// C:\Users\Rodrigo Ramos SSD\Desktop\ARK\sistema-ark-frontend\src\pages\PedidosFornecedor.jsx
-
+// C:\Users\Rodrigo Ramos
+// SSD\Desktop\ARK\sistema-ark-frontend\src\pages\PedidosFornecedor.jsx
 import React, { useState, useEffect } from 'react';
 import { getPedidosFornecedor, deletePedidoFornecedor } from '../api/pedidos-fornecedor-api';
-// REMOVIDO: Não precisamos mais de getFornecedores aqui, pois o modal de WhatsApp filtra do pedido
-// import { getFornecedores } from '../api/fornecedores-api'; 
+import { getFornecedores } from '../api/fornecedores-api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import PedidoFornecedorFormModal from '../components/PedidoFornecedorFormModal';
-import WhatsAppSenderModal from '../components/WhatsAppSenderModal'; // Importa o modal de envio de WhatsApp
+import WhatsAppSenderModal from '../components/WhatsAppSenderModal';
+import PedidoFornecedorPrintModal from '../components/PedidoFornecedorPrintModal'; // NOVO: Importa o modal de impressão
+
 import '../components/LoadingSpinner.css';
 import '../styles/common-table.css';
 
@@ -16,15 +17,13 @@ const formatDate = (dateString) => {
     const [year, month, day] = dateString.split('-');
     return `${day}/${month}/${year}`;
 };
-
 const formatPrice = (value) => {
     return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
 function PedidosFornecedor() {
     const [pedidos, setPedidos] = useState([]);
-    // REMOVIDO: Não precisamos mais de um estado para todos os fornecedores aqui, o modal de WhatsApp resolve isso
-    // const [fornecedores, setFornecedores] = useState([]); 
+    const [fornecedores, setFornecedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,9 +31,10 @@ function PedidosFornecedor() {
     const [actionMessage, setActionMessage] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterMonth, setFilterMonth] = useState(new Date().toISOString().slice(0, 7));
-
     const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
     const [pedidoToSendViaWhatsApp, setPedidoToSendViaWhatsApp] = useState(null);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false); // NOVO: Estado para o modal de impressão
+    const [pedidoToPrint, setPedidoToPrint] = useState(null); // NOVO: Pedido a ser impresso
 
     const fetchPedidos = async () => {
         setLoading(true);
@@ -50,50 +50,55 @@ function PedidosFornecedor() {
         }
     };
 
-    // REMOVIDO: fetchFornecedores não é mais necessário aqui.
-    // const fetchFornecedores = async () => {
-    //     try {
-    //         const data = await getFornecedores();
-    //         setFornecedores(data);
-    //     } catch (err) {
-    //         console.error("Erro ao buscar fornecedores para WhatsApp:", err);
-    //     }
-    // };
+    // Função para buscar todos os fornecedores (necessário para o modal do WhatsApp e Print)
+    const fetchFornecedores = async () => {
+        try {
+            const data = await getFornecedores();
+            setFornecedores(data);
+        } catch (err) {
+            console.error("Erro ao buscar fornecedores para modais:", err);
+            // Não define erro na tela principal, pois é um erro secundário
+        }
+    };
 
     useEffect(() => {
         fetchPedidos();
-        // REMOVIDO: fetchFornecedores() não é mais necessário aqui.
-        // fetchFornecedores(); 
+        fetchFornecedores(); // Busca fornecedores ao carregar a página
     }, []);
 
+    // Abre o modal no modo de cadastro
     const handleOpenCreateModal = () => {
         setPedidoToEdit(null);
         setIsModalOpen(true);
     };
 
+    // Abre o modal no modo de edição
     const handleOpenEditModal = (pedido) => {
         setPedidoToEdit(pedido);
         setIsModalOpen(true);
     };
 
+    // Fecha o modal de Edição/Criação
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setPedidoToEdit(null);
     };
 
+    // Chamado quando um pedido é salvo (criado ou editado)
     const handlePedidoSaved = () => {
-        fetchPedidos();
-        handleCloseModal();
+        fetchPedidos(); // Recarrega a lista
+        handleCloseModal(); // Fecha o modal
         setActionMessage('Pedido de Fornecedor salvo com sucesso!');
         setTimeout(() => setActionMessage(null), 3000);
     };
 
+    // Lida com a exclusão de pedido
     const handleDeletePedido = async (id, data) => {
         if (window.confirm(`Tem certeza que deseja excluir o pedido de ${formatDate(data)} (ID: ${id})?`)) {
             try {
                 await deletePedidoFornecedor(id);
                 setActionMessage(`Pedido de Fornecedor (ID: ${id}) excluído com sucesso!`);
-                fetchPedidos();
+                fetchPedidos(); // Recarrega a lista
                 setTimeout(() => setActionMessage(null), 3000);
             } catch (err) {
                 console.error('Erro ao excluir pedido de fornecedor:', err);
@@ -104,15 +109,30 @@ function PedidosFornecedor() {
         }
     };
 
+    // Abre o modal do WhatsApp
     const handleOpenWhatsAppModal = (pedido) => {
         setPedidoToSendViaWhatsApp(pedido);
         setIsWhatsAppModalOpen(true);
     };
 
+    // Fecha o modal do WhatsApp
     const handleCloseWhatsAppModal = () => {
         setIsWhatsAppModalOpen(false);
         setPedidoToSendViaWhatsApp(null);
     };
+
+    // NOVO: Abre o modal de impressão
+    const handleOpenPrintModal = (pedido) => {
+        setPedidoToPrint(pedido);
+        setIsPrintModalOpen(true);
+    };
+
+    // NOVO: Fecha o modal de impressão
+    const handleClosePrintModal = () => {
+        setIsPrintModalOpen(false);
+        setPedidoToPrint(null);
+    };
+
 
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
@@ -125,11 +145,10 @@ function PedidosFornecedor() {
     const filteredPedidos = pedidos.filter(pedido => {
         const pedidoMonth = pedido.data_pedido ? pedido.data_pedido.slice(0, 7) : "";
         const monthMatch = filterMonth ? pedidoMonth === filterMonth : true;
-
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
         const searchMatch = (
             (pedido.fornecedor &&
-                pedido.fornecedor.nome.toLowerCase().includes(lowerCaseSearchTerm)) ||
+            pedido.fornecedor.nome.toLowerCase().includes(lowerCaseSearchTerm)) ||
             (pedido.status && pedido.status.toLowerCase().includes(lowerCaseSearchTerm)) ||
             (pedido.itens && pedido.itens.some(item =>
                 item.produto &&
@@ -152,7 +171,6 @@ function PedidosFornecedor() {
     if (loading) {
         return <LoadingSpinner />;
     }
-
     if (error) {
         return <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>;
     }
@@ -181,10 +199,8 @@ function PedidosFornecedor() {
                     Fazer Pedido
                 </button>
             </div>
-
             <h2>Lista de Pedidos</h2>
             <p>Gerenciamento de pedidos aos fornecedores.</p>
-
             <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div className="filter-group">
                     <label htmlFor="filterMonth">Filtrar por Mês: </label>
@@ -207,16 +223,13 @@ function PedidosFornecedor() {
                     />
                 </div>
             </div>
-
             <div style={{ overflowX: 'auto' }}>
                 <table className="common-table">
                     <thead>
                         <tr>
                             <th>ID Pedido</th>
                             <th>Data</th>
-                            <th>Fornecedor</th>
                             <th>Status</th>
-                            <th>Itens (Qtd. Produto - Valor)</th>
                             <th>Total Pedido</th>
                             <th>Ações</th>
                         </tr>
@@ -227,24 +240,7 @@ function PedidosFornecedor() {
                                 <tr key={pedido.id}>
                                     <td>{pedido.id}</td>
                                     <td>{formatDate(pedido.data_pedido)}</td>
-                                    <td>{pedido.fornecedor ? pedido.fornecedor.nome : 'N/A'}</td>
                                     <td>{pedido.status}</td>
-                                    <td>
-                                        <ul style={{ margin: 0, padding: '0 0 0 15px', listStyle: 'disc' }}>
-                                            {pedido.itens && pedido.itens.length > 0 ? (
-                                                pedido.itens.map(item => (
-                                                    <li key={item.id || item.produtoId}>
-                                                        {item.quantidade} x {item.produto ? item.produto.nome : 'Produto Desconhecido'} ({formatPrice(item.preco_unitario)})
-                                                        {item.cliente && ` p/${item.cliente.nome}`}
-                                                        {item.caminhao && ` no ${item.caminhao.modelo} (${item.caminhao.placa})`}
-                                                        {item.observacoes && ` (Obs: ${item.observacoes})`}
-                                                    </li>
-                                                ))
-                                            ) : (
-                                                <li>Nenhum item</li>
-                                            )}
-                                        </ul>
-                                    </td>
                                     <td>{formatPrice(pedido.itens.reduce((sum, item) => sum + (parseFloat(item.quantidade) * parseFloat(item.preco_unitario)), 0))}</td>
                                     <td>
                                         <button
@@ -259,7 +255,6 @@ function PedidosFornecedor() {
                                         >
                                             Excluir
                                         </button>
-                                        {/* NOVO BOTÃO: Enviar WhatsApp */}
                                         <button
                                             onClick={() => handleOpenWhatsAppModal(pedido)}
                                             className="send-whatsapp-button"
@@ -267,12 +262,21 @@ function PedidosFornecedor() {
                                         >
                                             WhatsApp
                                         </button>
+                                        {/* NOVO BOTÃO: Imprimir/PDF */}
+                                        <button
+                                            onClick={() => handleOpenPrintModal(pedido)}
+                                            className="print-button"
+                                            style={{ marginLeft: '5px', backgroundColor: '#007bff', color: 'white' }}
+                                        >
+                                            Imprimir/PDF
+                                        </button>
                                     </td>
                                 </tr>
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="7" style={{ textAlign: 'center' }}>
+                                {/* colSpan é 5 agora: ID Pedido, Data, Status, Total Pedido, Ações */}
+                                <td colSpan="5" style={{ textAlign: 'center' }}>
                                     {searchTerm || filterMonth ? 'Nenhum pedido encontrado com os filtros aplicados.' : 'Nenhum pedido cadastrado ainda.'}
                                 </td>
                             </tr>
@@ -280,7 +284,6 @@ function PedidosFornecedor() {
                     </tbody>
                 </table>
             </div>
-
             {/* Rodapé com total do período */}
             <div className="table-footer-total">
                 <strong>Total do Período:</strong> {formatPrice(totalPeriodo)}
@@ -292,13 +295,17 @@ function PedidosFornecedor() {
                 onPedidoSaved={handlePedidoSaved}
                 pedidoToEdit={pedidoToEdit}
             />
-
-            {/* NOVO: Renderiza o WhatsAppSenderModal */}
+            {/* Renderiza o WhatsAppSenderModal */}
             <WhatsAppSenderModal
                 isOpen={isWhatsAppModalOpen}
                 onClose={handleCloseWhatsAppModal}
                 pedido={pedidoToSendViaWhatsApp}
-                // fornecedores={fornecedores} REMOVIDO: O modal de WhatsApp não precisa mais da lista completa de fornecedores.
+            />
+            {/* NOVO: Renderiza o PedidoFornecedorPrintModal */}
+            <PedidoFornecedorPrintModal
+                isOpen={isPrintModalOpen}
+                onClose={handleClosePrintModal}
+                pedido={pedidoToPrint}
             />
         </div>
     );

@@ -1,101 +1,187 @@
 // C:\Users\Rodrigo Ramos
 // SSD\Desktop\ARK\sistema-ark-frontend\src\components\PedidoClienteFormModal.jsx
-import React, { useState, useEffect } from 'react';
-// Importa funções de API de clientes e produtos (passadas via props do PedidosCliente.jsx)
-// E as funções de API de pedidos de cliente
-import { createPedidoCliente, updatePedidoCliente } from '../api/api'; 
-// Reutiliza CSS comum e cria um específico para este modal
+import React, { useState, useEffect, useRef } from 'react';
+import { createPedidoCliente, updatePedidoCliente } from '../api/pedidos-cliente-api'; // Nova API de pedidos de cliente
+import { getClientes } from '../api/api'; // getClientes continua aqui
+import { getProdutos } from '../api/produtos-api'; // getProdutos do backend real
 import '../styles/common-modal.css';
-import '../styles/PedidoClienteFormModal.css'; // Criaremos este CSS no próximo passo
+import '../styles/PedidoClienteFormModal.css'; // Criaremos este CSS a seguir
 
 // Função auxiliar para formatar preço
 const formatPrice = (value) => {
     return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit, clientes, produtos }) {
+// Valor inicial para UM item de pedido de cliente em branco
+const initialItemSlot = { produtoId: '', quantidade: '', preco_unitario: '' };
+const NUM_INITIAL_ROWS_CLIENTE = 15; // Número inicial de linhas para a planilha de itens do cliente
+
+function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit }) {
     const [pedidoData, setPedidoData] = useState({
-        data_pedido: new Date().toISOString().split('T')[0], // Data atual por padrão
-        clienteId: '', // Pedido para qual cliente
-        itens: [] // Array para os itens do pedido
+        clienteId: '',
+        data_pedido: new Date().toISOString().split('T')[0],
+        status: 'Aberto', // Status inicial para pedidos de cliente
+        itens_planilha: Array.from({ length: NUM_INITIAL_ROWS_CLIENTE }, () => ({
+            ...initialItemSlot
+        }))
     });
 
+    const [clientes, setClientes] = useState([]);
+    const [produtos, setProdutos] = useState([]);
+    
     const [message, setMessage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     const isEditing = !!pedidoToEdit;
 
+    const lastInputRef = useRef(null); // Ref para o último input da última linha para focar
+
+    // Efeito para carregar dados de clientes e produtos quando o modal abre
+    useEffect(() => {
+        const fetchDependencies = async () => {
+            setDataLoading(true);
+            try {
+                const [clis, prods] = await Promise.all([
+                    getClientes(),
+                    getProdutos()
+                ]);
+                setClientes(clis || []);
+                setProdutos(prods || []);
+            } catch (err) {
+                console.error('Erro ao carregar dados para o formulário de pedido de cliente:', err);
+                setMessage('Erro ao carregar opções para o formulário. Tente novamente.');
+                setClientes([]);
+                setProdutos([]);
+            } finally {
+                setDataLoading(false);
+            }
+        };
+        fetchDependencies();
+    }, []);
+
+    // Efeito para preencher o formulário se estiver em modo de edição
     useEffect(() => {
         if (isOpen) {
-            setMessage(null); // Limpa mensagens ao abrir
-            if (isEditing) {
-                // Quando em modo de edição, preenche com os dados do pedido existente
-                setPedidoData({
-                    data_pedido: pedidoToEdit.data_pedido || new Date().toISOString().split('T')[0],
-                    clienteId: pedidoToEdit.clienteId || '',
-                    itens: pedidoToEdit.itens.map(item => ({
-                        id: item.id, // ID do item, se estiver editando
-                        produtoId: item.produtoId,
-                        quantidade: item.quantidade,
-                        preco_unitario: item.preco_unitario,
-                        // Não há clienteId ou caminhaoId a nível de item para pedido de cliente,
-                        // mas se houvesse, seriam adicionados aqui.
-                        observacoes: item.observacoes || ''
-                    }))
+            setMessage(null);
+            if (isEditing && pedidoToEdit) {
+                const newItensPlanilha = Array.from({ length: NUM_INITIAL_ROWS_CLIENTE }, () => ({
+                    ...initialItemSlot
+                }));
+
+                // Distribui os itens do backend para os slots da planilha
+                pedidoToEdit.itens.forEach((itemBackend, index) => {
+                    if (newItensPlanilha[index]) {
+                        newItensPlanilha[index] = {
+                            id: itemBackend.id,
+                            produtoId: itemBackend.produtoId || '',
+                            quantidade: itemBackend.quantidade,
+                            preco_unitario: itemBackend.preco_unitario
+                        };
+                    }
                 });
+
+                setPedidoData(prev => ({
+                    ...prev,
+                    clienteId: pedidoToEdit.clienteId || '',
+                    data_pedido: pedidoToEdit.data_pedido || new Date().toISOString().split('T')[0],
+                    status: pedidoToEdit.status || 'Aberto',
+                    itens_planilha: newItensPlanilha
+                }));
             } else {
-                // Modo de cadastro: limpa o formulário e adiciona uma linha de item vazia
+                // Resetar para valores iniciais ao abrir para novo pedido
                 setPedidoData({
-                    data_pedido: new Date().toISOString().split('T')[0],
                     clienteId: '',
-                    itens: [{ produtoId: '', quantidade: '', preco_unitario: '', observacoes: '' }]
+                    data_pedido: new Date().toISOString().split('T')[0],
+                    status: 'Aberto',
+                    itens_planilha: Array.from({ length: NUM_INITIAL_ROWS_CLIENTE }, () => ({ ...initialItemSlot }))
                 });
             }
         }
     }, [isOpen, isEditing, pedidoToEdit]);
 
-    // Manipula mudanças nos campos do cabeçalho do pedido
     const handlePedidoChange = (e) => {
         const { name, value } = e.target;
         setPedidoData(prev => ({ ...prev, [name]: value }));
     };
 
-    // Manipula mudanças nos campos de um item específico do pedido
-    const handleItemChange = (index, e) => {
-        const { name, value } = e.target;
-        const newItens = [...pedidoData.itens];
-        newItens[index][name] = value;
+    const handleItemChange = (itemIndex, fieldName, value) => {
+        const newItensPlanilha = [...pedidoData.itens_planilha];
+        newItensPlanilha[itemIndex][fieldName] = value;
 
-        // Auto-preencher preço do produto se o produto for selecionado
-        if (name === 'produtoId' && value) {
+        // Auto-preencher preço de venda do produto se o produto for selecionado
+        if (fieldName === 'produtoId' && value) {
             const selectedProduct = produtos.find(p => String(p.id) === String(value));
             if (selectedProduct) {
-                newItens[index].preco_unitario = selectedProduct.preco_venda; // Preço de venda do produto
+                newItensPlanilha[itemIndex].preco_unitario = selectedProduct.preco_venda;
             }
         }
-
-        setPedidoData(prev => ({ ...prev, itens: newItens }));
+        setPedidoData(prev => ({ ...prev, itens_planilha: newItensPlanilha }));
     };
 
-    // Adiciona uma nova linha de item vazia
-    const handleAddItem = () => {
+    const handleAddItemRow = () => {
         setPedidoData(prev => ({
             ...prev,
-            itens: [...prev.itens, { produtoId: '', quantidade: '', preco_unitario: '', observacoes: '' }]
+            itens_planilha: [...prev.itens_planilha, { ...initialItemSlot }]
         }));
+        // Adiciona um pequeno atraso para garantir que o DOM seja atualizado antes de tentar focar
+        setTimeout(() => {
+            if (lastInputRef.current) {
+                lastInputRef.current.focus();
+            }
+        }, 0);
     };
 
-    // Remove uma linha de item pelo índice
-    const handleRemoveItem = (index) => {
-        const newItens = pedidoData.itens.filter((_, i) => i !== index);
-        setPedidoData(prev => ({ ...prev, itens: newItens }));
+    const handleRemoveItem = (itemIndex) => {
+        const newItensPlanilha = [...pedidoData.itens_planilha];
+        // Se o item tem ID, ele existia no BD. Ao "remover" no frontend, limpamos ele
+        // mas mantemos o ID para que o backend saiba qual ID não incluir mais.
+        // O `handleSubmit` vai filtrar itens com `produtoId` vazio.
+        if (newItensPlanilha[itemIndex].id) {
+            newItensPlanilha[itemIndex] = { ...initialItemSlot, id: newItensPlanilha[itemIndex].id };
+        } else {
+            newItensPlanilha.splice(itemIndex, 1); // Remove completamente se for um item novo
+            // Garante que haja pelo menos uma linha em branco se todas forem removidas
+            if (newItensPlanilha.length === 0) {
+                newItensPlanilha.push({ ...initialItemSlot });
+            }
+        }
+        setPedidoData(prev => ({ ...prev, itens_planilha: newItensPlanilha }));
+
+        setMessage(`Item da linha ${itemIndex + 1} foi removido/limpo.`);
+        setTimeout(() => setMessage(null), 3000);
     };
 
-    // Calcula o total do pedido
-    const calcularTotal = () => {
-        return pedidoData.itens.reduce((total, item) => {
-            const quantidade = parseFloat(item.quantidade) || 0;
-            const preco = parseFloat(item.preco_unitario) || 0;
-            return total + (quantidade * preco);
+    const handleKeyDown = (e, itemIndex, fieldName) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Previne o comportamento padrão do Enter (submeter formulário)
+
+            const currentInput = e.target;
+            const currentRow = currentInput.closest('.item-row');
+            const inputsInRow = Array.from(currentRow.querySelectorAll('input, select'));
+            const currentIndex = inputsInRow.indexOf(currentInput);
+
+            // Tenta ir para o próximo input na mesma linha
+            if (currentIndex < inputsInRow.length - 1) {
+                inputsInRow[currentIndex + 1].focus();
+            } else {
+                // Se for o último input da linha atual, tenta ir para o primeiro input da próxima linha
+                const nextRow = currentRow.nextElementSibling;
+                if (nextRow && nextRow.classList.contains('item-row')) {
+                    const nextRowInputs = nextRow.querySelectorAll('input, select');
+                    if (nextRowInputs.length > 0) {
+                        nextRowInputs[0].focus();
+                    }
+                } else {
+                    // Se for a última linha e o último input, adiciona uma nova linha
+                    handleAddItemRow();
+                }
+            }
+        }
+    };
+
+    const calcularTotalPedido = () => {
+        return pedidoData.itens_planilha.reduce((total, item) => {
+            return total + (parseFloat(item.quantidade || 0) * parseFloat(item.preco_unitario || 0));
         }, 0);
     };
 
@@ -104,63 +190,60 @@ function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit, 
         setMessage(null);
         setLoading(true);
 
-        // Validação básica do cabeçalho
-        if (!pedidoData.clienteId || !pedidoData.data_pedido) {
-            setMessage('Cliente e Data do Pedido são obrigatórios.');
+        if (!pedidoData.clienteId) {
+            setMessage('Selecione um cliente.');
+            setLoading(false);
+            return;
+        }
+        if (!pedidoData.data_pedido) {
+            setMessage('Data do Pedido é obrigatória.');
             setLoading(false);
             return;
         }
 
-        // Validação básica dos itens
-        if (pedidoData.itens.length === 0) {
-            setMessage('O pedido deve ter pelo menos um item.');
-            setLoading(false);
-            return;
-        }
-
-        const itensValidos = pedidoData.itens.map(item => ({
+        const itensValidos = pedidoData.itens_planilha.filter(item => 
+            item.produtoId && parseFloat(item.quantidade) > 0 && parseFloat(item.preco_unitario) >= 0
+        ).map(item => ({
+            id: item.id, // Inclui o ID para operações de PUT (atualização de itens existentes)
             produtoId: parseInt(item.produtoId),
             quantidade: parseFloat(item.quantidade),
-            preco_unitario: parseFloat(item.preco_unitario),
-            observacoes: item.observacoes === '' ? null : item.observacoes,
+            preco_unitario: parseFloat(item.preco_unitario)
         }));
 
-        // Verifica se todos os itens têm produto, quantidade e preço
-        const itemsCompletos = itensValidos.every(item => 
-            !isNaN(item.produtoId) && item.produtoId > 0 &&
-            !isNaN(item.quantidade) && item.quantidade > 0 &&
-            !isNaN(item.preco_unitario) && item.preco_unitario >= 0
-        );
-
-        if (!itemsCompletos) {
-            setMessage('Todos os itens devem ter Produto, Quantidade e Preço unitário válidos.');
+        if (itensValidos.length === 0) {
+            setMessage('O pedido deve ter pelo menos um item válido (com produto, quantidade e preço).');
             setLoading(false);
             return;
         }
-
+        
         try {
             let savedPedido;
             if (isEditing) {
                 savedPedido = await updatePedidoCliente(pedidoToEdit.id, {
-                    ...pedidoData,
+                    clienteId: parseInt(pedidoData.clienteId),
+                    data_pedido: pedidoData.data_pedido,
+                    status: pedidoData.status,
                     itens: itensValidos
                 });
                 setMessage(`Pedido de Cliente (ID: ${savedPedido.pedido.id}) atualizado com sucesso!`);
             } else {
                 savedPedido = await createPedidoCliente({
-                    ...pedidoData,
+                    clienteId: parseInt(pedidoData.clienteId),
+                    data_pedido: pedidoData.data_pedido,
+                    status: pedidoData.status,
                     itens: itensValidos
                 });
                 setMessage(`Pedido de Cliente (ID: ${savedPedido.pedido.id}) cadastrado com sucesso!`);
-                // Limpa o formulário após o cadastro
+                // Reseta o formulário após o cadastro
                 setPedidoData({
-                    data_pedido: new Date().toISOString().split('T')[0],
                     clienteId: '',
-                    itens: [{ produtoId: '', quantidade: '', preco_unitario: '', observacoes: '' }]
+                    data_pedido: new Date().toISOString().split('T')[0],
+                    status: 'Aberto',
+                    itens_planilha: Array.from({ length: NUM_INITIAL_ROWS_CLIENTE }, () => ({ ...initialItemSlot }))
                 });
             }
             if (onPedidoSaved) {
-                onPedidoSaved();
+                onPedidoSaved(); // Chama a função para recarregar a lista na página principal
             }
         } catch (err) {
             console.error('Erro ao salvar pedido de cliente:', err);
@@ -173,9 +256,19 @@ function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit, 
 
     if (!isOpen) return null;
 
+    if (dataLoading) {
+        return (
+            <div className="modal-overlay">
+                <div className="modal-content">
+                    <p>Carregando dados...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-content modal-content-wide" onClick={e => e.stopPropagation()}> {/* Usar modal-content-wide ou similar para largura */}
                 <div className="modal-header">
                     <h2>{isEditing ? 'Editar Pedido do Cliente' : 'Novo Pedido do Cliente'}</h2>
                     <button className="close-button" onClick={onClose}>&times;</button>
@@ -189,17 +282,6 @@ function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit, 
                     <form onSubmit={handleSubmit}>
                         <h3>Dados do Pedido</h3>
                         <div className="section-container">
-                            <div className="form-group">
-                                <label htmlFor="data_pedido">Data do Pedido:</label>
-                                <input
-                                    type="date"
-                                    id="data_pedido"
-                                    name="data_pedido"
-                                    value={pedidoData.data_pedido}
-                                    onChange={handlePedidoChange}
-                                    required
-                                />
-                            </div>
                             <div className="form-group">
                                 <label htmlFor="clienteId">Cliente:</label>
                                 <select
@@ -215,85 +297,104 @@ function PedidoClienteFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdit, 
                                     ))}
                                 </select>
                             </div>
+                            <div className="form-group">
+                                <label htmlFor="data_pedido">Data do Pedido:</label>
+                                <input
+                                    type="date"
+                                    id="data_pedido"
+                                    name="data_pedido"
+                                    value={pedidoData.data_pedido}
+                                    onChange={handlePedidoChange}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="status">Status:</label>
+                                <select
+                                    id="status"
+                                    name="status"
+                                    value={pedidoData.status}
+                                    onChange={handlePedidoChange}
+                                    required
+                                >
+                                    <option value="Aberto">Aberto</option>
+                                    <option value="Processando">Processando</option>
+                                    <option value="Concluído">Concluído</option>
+                                    <option value="Cancelado">Cancelado</option>
+                                </select>
+                            </div>
                         </div>
 
                         <h3>Itens do Pedido</h3>
-                        <div className="items-table-container"> {/* Reutiliza a classe do PedidoFornecedor */}
-                            <div className="items-header">
-                                <div className="col-quantidade">Qtd</div>
-                                <div className="col-produto">Produto</div>
-                                <div className="col-preco">Preço Unit.</div>
-                                <div className="col-total">Total Item</div>
-                                <div className="col-observacoes">Obs. Item</div>
-                                <div className="col-acoes"></div>
+                        <div className="items-spreadsheet-container">
+                            <div className="items-spreadsheet-header">
+                                <div className="col-header-produto">Produto</div>
+                                <div className="col-header-quantidade">Qtd.</div>
+                                <div className="col-header-preco-unitario">Preço Unit.</div>
+                                <div className="col-header-actions">Ações</div>
                             </div>
-                            {pedidoData.itens.map((item, index) => (
-                                <div className="item-row" key={index}>
-                                    <div className="col-quantidade">
-                                        <input
-                                            type="number"
-                                            name="quantidade"
-                                            value={item.quantidade}
-                                            onChange={(e) => handleItemChange(index, e)}
-                                            required
-                                            min="0"
-                                            step="0.01"
-                                        />
+                            <div className="items-spreadsheet-body">
+                                {pedidoData.itens_planilha.map((item, index) => (
+                                    <div className="item-row" key={index}>
+                                        <div className="cell col-produto">
+                                            <select
+                                                name="produtoId"
+                                                value={item.produtoId}
+                                                onChange={(e) => handleItemChange(index, e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, index, e.target.name)}
+                                            >
+                                                <option value="">Selecione um Produto</option>
+                                                {produtos.map(prod => (
+                                                    <option key={prod.id} value={prod.id}>{prod.nome} ({prod.unidade_medida})</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="cell col-quantidade">
+                                            <input
+                                                type="number"
+                                                name="quantidade"
+                                                value={item.quantidade}
+                                                onChange={(e) => handleItemChange(index, e.target.name, e.target.value)}
+                                                placeholder="Qtd."
+                                                min="0"
+                                                step="0.01"
+                                                onKeyDown={(e) => handleKeyDown(e, index, e.target.name)}
+                                            />
+                                        </div>
+                                        <div className="cell col-preco-unitario">
+                                            <input
+                                                type="number"
+                                                name="preco_unitario"
+                                                value={item.preco_unitario}
+                                                onChange={(e) => handleItemChange(index, e.target.name, e.target.value)}
+                                                placeholder="Preço Unit."
+                                                min="0"
+                                                step="0.01"
+                                                onKeyDown={(e) => handleKeyDown(e, index, e.target.name)}
+                                                ref={index === pedidoData.itens_planilha.length - 1 ? lastInputRef : null}
+                                            />
+                                        </div>
+                                        <div className="cell col-actions">
+                                            <button type="button" onClick={() => handleRemoveItem(index)} className="remove-item-btn">
+                                                &times;
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="col-produto">
-                                        <select
-                                            name="produtoId"
-                                            value={item.produtoId}
-                                            onChange={(e) => handleItemChange(index, e)}
-                                            required
-                                        >
-                                            <option value="">Selecione</option>
-                                            {produtos.map(prod => (
-                                                <option key={prod.id} value={prod.id}>{prod.nome} ({prod.unidade_medida})</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-preco">
-                                        <input
-                                            type="number"
-                                            name="preco_unitario"
-                                            value={item.preco_unitario}
-                                            onChange={(e) => handleItemChange(index, e)}
-                                            required
-                                            min="0"
-                                            step="0.01"
-                                        />
-                                    </div>
-                                    <div className="col-total">
-                                        {formatPrice((parseFloat(item.quantidade) || 0) * (parseFloat(item.preco_unitario) || 0))}
-                                    </div>
-                                    <div className="col-observacoes">
-                                        <input
-                                            type="text"
-                                            name="observacoes"
-                                            value={item.observacoes}
-                                            onChange={(e) => handleItemChange(index, e)}
-                                            placeholder="Obs."
-                                        />
-                                    </div>
-                                    <div className="col-acoes">
-                                        <button type="button" onClick={() => handleRemoveItem(index)} className="remove-item-btn">
-                                            &times;
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            <button type="button" onClick={handleAddItem} className="add-item-btn">
-                                Adicionar Item
-                            </button>
-                            <div className="order-total">
-                                <strong>Total do Pedido:</strong> {formatPrice(calcularTotal())}
+                                ))}
                             </div>
+                        </div>
+                        
+                        <button type="button" onClick={handleAddItemRow} className="add-item-row-btn">
+                            Adicionar Mais Itens
+                        </button>
+
+                        <div className="order-total">
+                            <strong>Total do Pedido:</strong> {formatPrice(calcularTotalPedido())}
                         </div>
 
                         <div className="modal-actions">
                             <button type="submit" disabled={loading}>
-                                {loading ? (isEditing ? 'Atualizando...' : 'Cadastrando...') : (isEditing ? 'Salvar Pedido' : 'Criar Pedido')}
+                                {loading ? (isEditing ? 'Atualizando...' : 'Cadastrando...') : (isEditing ? 'Salvar Pedido' : 'Realizar Pedido')}
                             </button>
                             <button type="button" onClick={onClose} disabled={loading} className="cancel-button">
                                 Cancelar

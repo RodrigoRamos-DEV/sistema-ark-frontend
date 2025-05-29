@@ -15,7 +15,7 @@ const formatPrice = (value) => {
 };
 
 // Valor inicial para UM item de pedido em branco (um slot na planilha)
-const initialSlotItem = { quantidade: '', fornecedorId: '', produtoId: '', caminhaoId: '', preco_unitario: '' };
+const initialSlotItem = { id: null, quantidade: '', fornecedorId: '', produtoId: '', caminhaoId: '', preco_unitario: '', observacoes: '' };
 const NUM_INITIAL_ROWS = 30; // Define o número inicial de LINHAS da planilha
 const NUM_COL_GROUPS_PER_ROW = 2; // Duas colunas (esquerda e direita)
 
@@ -32,15 +32,16 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
 
     const [fornecedores, setFornecedores] = useState([]);
     const [produtos, setProdutos] = useState([]);
-    const [clientes, setClientes] = useState([]); 
-    const [caminhoes, setCaminhoes] = useState([]); 
+    const [clientes, setClientes] = useState([]);
+    const [caminhoes, setCaminhoes] = useState([]);
 
     const [message, setMessage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(true);
     const isEditing = !!pedidoToEdit;
 
-    const lastInputRef = useRef(null); // Ref para o último input da última linha
+    // Ref para o último input da última linha para focar ao adicionar nova linha
+    const lastInputRef = useRef(null); 
 
     useEffect(() => {
         const fetchDependencies = async () => {
@@ -91,7 +92,8 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                             fornecedorId: itemBackend.fornecedorId || '',
                             produtoId: itemBackend.produtoId || '',
                             caminhaoId: itemBackend.caminhaoId || '',
-                            preco_unitario: itemBackend.preco_unitario
+                            preco_unitario: itemBackend.preco_unitario,
+                            observacoes: itemBackend.observacoes || ''
                         };
                     }
                 });
@@ -124,6 +126,7 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
         const newItensPlanilha = [...pedidoData.itens_planilha];
         newItensPlanilha[rowIndex][slotSide][fieldName] = value;
 
+        // Auto-preencher preço do produto se o produto for selecionado
         if (fieldName === 'produtoId' && value) {
             const selectedProduct = produtos.find(p => String(p.id) === String(value));
             if (selectedProduct) {
@@ -139,25 +142,68 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
             itens_planilha: [...prev.itens_planilha, { left: { ...initialSlotItem }, right: { ...initialSlotItem } }]
         }));
         setTimeout(() => {
+            // Foca no primeiro input da nova linha adicionada
             if (lastInputRef.current) {
-                lastInputRef.current.focus();
+                const newRowInputs = lastInputRef.current.closest('.spreadsheet-row').querySelectorAll('input, select');
+                if (newRowInputs.length > 0) {
+                    newRowInputs[0].focus();
+                }
             }
         }, 0);
     };
 
+    // Atualizado: handleRemoveSlotItem agora remove o item se ele já existe no BD (tem ID)
+    // ou apenas limpa se for um item novo.
     const handleRemoveSlotItem = (rowIndex, slotSide) => {
         const newItensPlanilha = [...pedidoData.itens_planilha];
-        newItensPlanilha[rowIndex][slotSide] = { ...initialSlotItem };
+        const itemToRemove = newItensPlanilha[rowIndex][slotSide];
+
+        if (itemToRemove.id) {
+            // Se o item tem um ID, ele veio do backend, então removemos ele 'virtualmente'
+            // marcando para não ser enviado. Uma estratégia real seria um campo 'deleted: true'.
+            // Por enquanto, vamos limpá-lo e o filtro no handleSubmit não o incluirá.
+            newItensPlanilha[rowIndex][slotSide] = { ...initialSlotItem, id: itemToRemove.id }; // Mantém o ID para possível lógica futura (soft delete)
+        } else {
+            // Se o item é novo (não tem ID), apenas limpa os campos.
+            newItensPlanilha[rowIndex][slotSide] = { ...initialSlotItem };
+        }
         setPedidoData(prev => ({ ...prev, itens_planilha: newItensPlanilha }));
 
         setMessage(`Campos do slot ${slotSide === 'left' ? 'esquerdo' : 'direito'} da linha ${rowIndex + 1} foram limpos.`);
         setTimeout(() => setMessage(null), 3000);
     };
 
+    // ATUALIZADO: handleKeyDown para controlar o foco e prevenir o submit do formulário no Enter
     const handleKeyDown = (e, rowIndex, slotSide, fieldName) => {
-        if (e.key === 'Enter' && rowIndex === pedidoData.itens_planilha.length - 1 && slotSide === 'right' && fieldName === 'preco_unitario') {
-            e.preventDefault();
-            handleAddRow();
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Previne o comportamento padrão do Enter (submeter formulário)
+
+            const currentInput = e.target;
+            const currentRow = currentInput.closest('.spreadsheet-row');
+            const inputsInRow = Array.from(currentRow.querySelectorAll('input, select'));
+            const currentIndex = inputsInRow.indexOf(currentInput);
+
+            // Calcula o próximo índice
+            let nextInput = null;
+
+            // Tenta ir para o próximo input na mesma linha
+            if (currentIndex < inputsInRow.length - 1) {
+                nextInput = inputsInRow[currentIndex + 1];
+            } else {
+                // Se for o último input da linha atual, tenta ir para o primeiro input da próxima linha
+                const nextRow = currentRow.nextElementSibling;
+                if (nextRow && nextRow.classList.contains('spreadsheet-row')) {
+                    nextInput = nextRow.querySelector('input, select');
+                } else {
+                    // Se for a última linha e o último input, adiciona uma nova linha
+                    handleAddRow();
+                    return; // Retorna para que o foco seja tratado pelo handleAddRow
+                }
+            }
+
+            if (nextInput) {
+                nextInput.focus();
+            }
         }
     };
 
@@ -182,22 +228,28 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
 
         const itensValidos = [];
         pedidoData.itens_planilha.forEach(row => {
+            // Verifica o slot ESQUERDO
             if (row.left.produtoId && parseFloat(row.left.quantidade) > 0 && parseFloat(row.left.preco_unitario) >= 0) {
                 itensValidos.push({
+                    id: row.left.id || null, // Inclui o ID se ele existir, senão null para novos itens
                     produtoId: parseInt(row.left.produtoId),
                     quantidade: parseFloat(row.left.quantidade),
                     preco_unitario: parseFloat(row.left.preco_unitario),
                     fornecedorId: row.left.fornecedorId === '' ? null : parseInt(row.left.fornecedorId),
                     caminhaoId: row.left.caminhaoId === '' ? null : parseInt(row.left.caminhaoId),
+                    observacoes: row.left.observacoes === '' ? null : row.left.observacoes // Inclui observações
                 });
             }
+            // Verifica o slot DIREITO
             if (row.right.produtoId && parseFloat(row.right.quantidade) > 0 && parseFloat(row.right.preco_unitario) >= 0) {
                 itensValidos.push({
+                    id: row.right.id || null, // Inclui o ID se ele existir, senão null para novos itens
                     produtoId: parseInt(row.right.produtoId),
                     quantidade: parseFloat(row.right.quantidade),
                     preco_unitario: parseFloat(row.right.preco_unitario),
                     fornecedorId: row.right.fornecedorId === '' ? null : parseInt(row.right.fornecedorId),
                     caminhaoId: row.right.caminhaoId === '' ? null : parseInt(row.right.caminhaoId),
+                    observacoes: row.right.observacoes === '' ? null : row.right.observacoes // Inclui observações
                 });
             }
         });
@@ -307,16 +359,16 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                             <div className="spreadsheet-header">
                                 {/* Cabeçalhos para o BLOCO ESQUERDO */}
                                 <div className="col-header-qty">Qtd</div>
-                                <div className="col-header-fornecedor-item">Fornecedor</div>
-                                <div className="col-header-produto">Produto</div>
+                                <div className="col-header-fornecedor-item">Forn</div>
+                                <div className="col-header-produto">Prod</div>
                                 <div className="col-header-caminhao">Caminhão</div>
                                 <div className="col-header-preco">Preço</div>
                                 <div className="col-header-actions">Ações</div> {/* Ações para o bloco esquerdo */}
 
                                 {/* Cabeçalhos para o BLOCO DIREITO */}
                                 <div className="col-header-qty">Qtd</div>
-                                <div className="col-header-fornecedor-item">Fornecedor</div>
-                                <div className="col-header-produto">Produto</div>
+                                <div className="col-header-fornecedor-item">Forn</div>
+                                <div className="col-header-produto">Prod</div>
                                 <div className="col-header-caminhao">Caminhão</div>
                                 <div className="col-header-preco">Preço</div>
                                 <div className="col-header-actions">Ações</div> {/* Ações para o bloco direito */}
@@ -342,6 +394,7 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="fornecedorId"
                                                 value={row.left.fornecedorId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'left', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'left', e.target.name)}
                                             >
                                                 <option value="">Selecione Forn.</option>
                                                 {fornecedores.map(forn => (
@@ -354,8 +407,9 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="produtoId"
                                                 value={row.left.produtoId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'left', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'left', e.target.name)}
                                             >
-                                                <option value="">Selecione Produto</option>
+                                                <option value="">Selecione Prod.</option>
                                                 {produtos.map(prod => (
                                                     <option key={prod.id} value={prod.id}>{prod.nome} ({prod.unidade_medida})</option>
                                                 ))}
@@ -366,6 +420,7 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="caminhaoId"
                                                 value={row.left.caminhaoId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'left', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'left', e.target.name)}
                                             >
                                                 <option value="">Selecione Caminhão</option>
                                                 {caminhoes.map(cam => (
@@ -409,6 +464,7 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="fornecedorId"
                                                 value={row.right.fornecedorId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'right', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'right', e.target.name)}
                                             >
                                                 <option value="">Selecione Forn.</option>
                                                 {fornecedores.map(forn => (
@@ -421,8 +477,9 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="produtoId"
                                                 value={row.right.produtoId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'right', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'right', e.target.name)}
                                             >
-                                                <option value="">Selecione Produto</option>
+                                                <option value="">Selecione Prod.</option>
                                                 {produtos.map(prod => (
                                                     <option key={prod.id} value={prod.id}>{prod.nome} ({prod.unidade_medida})</option>
                                                 ))}
@@ -433,6 +490,7 @@ function PedidoFornecedorFormModal({ isOpen, onClose, onPedidoSaved, pedidoToEdi
                                                 name="caminhaoId"
                                                 value={row.right.caminhaoId}
                                                 onChange={(e) => handleSlotItemChange(rowIndex, 'right', e.target.name, e.target.value)}
+                                                onKeyDown={(e) => handleKeyDown(e, rowIndex, 'right', e.target.name)}
                                             >
                                                 <option value="">Selecione Caminhão</option>
                                                 {caminhoes.map(cam => (
